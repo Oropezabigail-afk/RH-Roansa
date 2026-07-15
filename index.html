@@ -30,31 +30,27 @@ nav{padding:14px 10px;display:flex;flex-direction:column;gap:2px;flex:1}
 .btn-secondary{background:#fff;color:var(--gray7);border:1.5px solid var(--gray2)}
 .btn-ghost{background:transparent;color:var(--gray7);border:none}
 .btn-danger{background:#fff;color:var(--red);border:1.5px solid var(--red)}
-.btn-sm{padding:5px 12px;font-size:11px}
 .btn-green{background:#166534;color:#fff}
+.btn-sm{padding:5px 12px;font-size:11px}
 .badge{padding:2px 9px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;display:inline-block;white-space:nowrap}
 .badge-green{background:#DCFCE7;color:#166534}
 .badge-red{background:var(--red-light);color:var(--red)}
 .badge-yellow{background:#FEF9C3;color:#92400E}
 .badge-blue{background:#DBEAFE;color:#1D4ED8}
 .badge-gray{background:var(--gray1);color:var(--gray7)}
-.badge-purple{background:#EDE9FE;color:#6D28D9}
 .avatar{border-radius:50%;background:linear-gradient(135deg,var(--red) 0%,var(--red-dark) 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0}
-/* Stats */
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
 .stat-card{background:#fff;border:1.5px solid var(--gray2);border-radius:11px;padding:16px 18px}
 .stat-card.accent{border-left:4px solid var(--red)}
 .stat-val{font-size:28px;font-weight:900;line-height:1;color:var(--black)}
 .stat-card.accent .stat-val{color:var(--red)}
 .stat-label{font-size:11px;font-weight:700;color:var(--gray7);margin-top:4px}
-/* Alert boxes */
 .alert-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
 .alert-box{background:#fff;border:1.5px solid var(--gray2);border-radius:11px;padding:16px}
 .alert-title{font-weight:800;font-size:13px;color:var(--black);margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .alert-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--gray1)}
 .alert-row:last-child{border-bottom:none}
 .card{background:#fff;border:1.5px solid var(--gray2);border-radius:11px;padding:16px 18px}
-/* Employees */
 .emp-list{display:flex;flex-direction:column;gap:9px}
 .emp-card{background:#fff;border:1.5px solid var(--gray2);border-radius:11px;padding:13px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border .15s,box-shadow .15s}
 .emp-card:hover{border-color:var(--red);box-shadow:0 2px 14px rgba(192,17,43,.1)}
@@ -64,7 +60,6 @@ nav{padding:14px 10px;display:flex;flex-direction:column;gap:2px;flex:1}
 .search-bar{display:flex;gap:9px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
 .search-bar input,.search-bar select{padding:8px 11px;border:1.5px solid var(--gray2);border-radius:7px;font-family:inherit;font-size:12px;color:var(--black);background:#fff;outline:none}
 .search-bar input{flex:1;min-width:180px}
-/* Detail */
 .hero-card{background:linear-gradient(135deg,#111 0%,#1C1C1C 100%);border-radius:13px;padding:22px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:16px}
 .hero-name{font-size:20px;font-weight:900;color:#fff;line-height:1.1}
 .hero-sub{font-size:12px;color:var(--gray4);margin-top:3px}
@@ -74,82 +69,88 @@ nav{padding:14px 10px;display:flex;flex-direction:column;gap:2px;flex:1}
 .section-title{font-size:10px;font-weight:800;color:var(--red);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--gray1);padding-bottom:7px;margin-bottom:10px}
 .data-row{display:grid;grid-template-columns:130px 1fr;gap:6px;align-items:start;margin-bottom:7px}
 .data-label{font-size:11px;color:var(--gray4);font-weight:600}
-.data-val{font-size:12px;color:var(--black);font-weight:600}
+.data-val{font-size:12px;color:var(--black);font-weight:600;word-break:break-all}
 .doc-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
 .doc-chip{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px}
 .doc-ok{background:#DCFCE7;color:#166534;border:1px solid #BBF7D0}
 .doc-no{background:var(--red-light);color:var(--red);border:1px solid #FECACA}
 .alert-banner{background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:9px;padding:11px 15px;display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:12px;color:#92400E}
 /* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;z-index:100;overflow-y:auto;padding:32px 12px}
-.modal{background:#fff;border-radius:14px;width:100%;max-width:700px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;z-index:100;overflow-y:auto;padding:32px 12px}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:720px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-lg{max-width:820px}
 .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .modal-title{font-size:17px;font-weight:900;color:var(--black)}
-.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray4);line-height:1}
-.form-section{margin-bottom:16px}
-.form-section-title{font-size:10px;font-weight:800;color:var(--red);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray4);line-height:1;padding:2px 6px}
+.form-section{margin-bottom:18px}
+.form-section-title{font-size:10px;font-weight:800;color:var(--red);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--gray1)}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.field{display:flex;flex-direction:column;gap:3px}
+.field{display:flex;flex-direction:column;gap:4px}
 .field-label{font-size:10px;font-weight:800;color:var(--gray7);letter-spacing:.4px;text-transform:uppercase}
-.field input,.field select,.field textarea{padding:8px 11px;border:1.5px solid var(--gray2);border-radius:7px;font-family:inherit;font-size:13px;color:var(--black);background:#fff;outline:none;width:100%}
-.field textarea{resize:vertical}
-.doc-toggle{padding:5px 13px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;transition:all .1s}
-.doc-toggle.checked{background:#DCFCE7;color:#166534;border:1.5px solid #BBF7D0}
-.doc-toggle.unchecked{background:var(--gray1);color:var(--gray7);border:1.5px solid var(--gray2)}
-.modal-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--gray2)}
+.field input,.field select,.field textarea{padding:9px 12px;border:1.5px solid var(--gray2);border-radius:7px;font-family:inherit;font-size:13px;color:var(--black);background:#fff;outline:none;width:100%;transition:border .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--red)}
+.field textarea{resize:vertical;min-height:70px}
+.doc-toggle{padding:6px 13px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;transition:all .1s;border:1.5px solid}
+.doc-toggle.checked{background:#DCFCE7;color:#166534;border-color:#BBF7D0}
+.doc-toggle.unchecked{background:var(--gray1);color:var(--gray7);border-color:var(--gray2)}
+.modal-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--gray2)}
 .empty{text-align:center;padding:40px;color:var(--gray4);font-size:13px}
 .count-note{font-size:11px;color:var(--gray4);margin-bottom:10px}
-/* AI Scanner */
-.scan-zone{border:2.5px dashed var(--gray2);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:border .15s,background .15s;background:#fafafa}
-.scan-zone:hover,.scan-zone.drag{border-color:var(--red);background:var(--red-light)}
-.scan-zone input[type=file]{display:none}
-.scan-zone-icon{font-size:32px;margin-bottom:8px}
-.scan-zone-text{font-size:13px;font-weight:700;color:var(--gray7)}
-.scan-zone-sub{font-size:11px;color:var(--gray4);margin-top:3px}
-.ai-result{background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:10px;padding:14px 16px;margin-top:12px}
-.ai-result-title{font-size:11px;font-weight:800;color:#166534;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.ai-field-preview{display:grid;grid-template-columns:120px 1fr;gap:4px 8px;font-size:12px;margin-bottom:4px}
-.ai-field-key{color:var(--gray4);font-weight:600}
-.ai-field-val{color:var(--black);font-weight:700}
-.spinner{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner-dark{border:2.5px solid var(--gray2);border-top-color:var(--red)}
-/* Credencial */
-.credential-card{width:340px;background:linear-gradient(145deg,#111 0%,#1a0008 60%,#2a0010 100%);border-radius:16px;padding:22px 20px;color:#fff;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);flex-shrink:0}
-.credential-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:var(--red);border-radius:50%;opacity:.15}
-.credential-card::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;background:var(--red);border-radius:50%;opacity:.1}
-.cred-logo{display:flex;align-items:center;gap:8px;margin-bottom:16px}
-.cred-logo-box{width:28px;height:28px;background:var(--red);border-radius:5px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px}
-.cred-logo-text{font-weight:900;font-size:12px;letter-spacing:.5px}
+/* Steps */
+.steps{display:flex;gap:0;margin-bottom:24px;background:#fff;border:1.5px solid var(--gray2);border-radius:11px;overflow:hidden}
+.step{flex:1;padding:14px 10px;text-align:center;border-right:1px solid var(--gray2);cursor:pointer;transition:background .15s}
+.step:last-child{border-right:none}
+.step.active{background:var(--red);color:#fff}
+.step.done{background:#DCFCE7;color:#166534}
+.step-num{font-size:18px;font-weight:900;line-height:1}
+.step-lbl{font-size:10px;font-weight:700;margin-top:3px;opacity:.8;text-transform:uppercase;letter-spacing:.5px}
+/* Photo upload */
+.photo-zone{border:2.5px dashed var(--gray2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .15s;background:#fafafa}
+.photo-zone:hover{border-color:var(--red);background:var(--red-light)}
+.photo-preview{width:90px;height:90px;border-radius:10px;object-fit:cover;margin:0 auto 8px;display:block;border:2px solid var(--gray2)}
+/* Credential */
+.cred-wrap{display:flex;justify-content:center;padding:10px 0}
+.credential-card{width:320px;background:linear-gradient(145deg,#0f0f0f 0%,#1a0008 55%,#220010 100%);border-radius:16px;padding:22px 20px 18px;color:#fff;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.45)}
+.credential-card::before{content:'';position:absolute;top:-40px;right:-40px;width:130px;height:130px;background:var(--red);border-radius:50%;opacity:.12}
+.credential-card::after{content:'';position:absolute;bottom:-25px;left:-25px;width:90px;height:90px;background:var(--red);border-radius:50%;opacity:.08}
+.cred-logo{display:flex;align-items:center;gap:8px;margin-bottom:18px;position:relative;z-index:1}
+.cred-logo-box{width:30px;height:30px;background:var(--red);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px}
+.cred-logo-name{font-weight:900;font-size:13px;letter-spacing:.5px}
 .cred-logo-sub{font-size:8px;color:var(--gray4);letter-spacing:1px;text-transform:uppercase}
-.cred-photo{width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,var(--red),var(--red-dark));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;margin-bottom:12px;overflow:hidden}
+.cred-body{display:flex;gap:14px;align-items:flex-start;position:relative;z-index:1;margin-bottom:16px}
+.cred-photo{width:70px;height:70px;border-radius:10px;background:linear-gradient(135deg,var(--red),var(--red-dark));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;flex-shrink:0;overflow:hidden;border:2px solid rgba(255,255,255,.1)}
 .cred-photo img{width:100%;height:100%;object-fit:cover}
-.cred-name{font-size:15px;font-weight:900;line-height:1.2;margin-bottom:3px}
-.cred-puesto{font-size:10px;color:var(--gray4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
-.cred-divider{height:1px;background:rgba(255,255,255,.1);margin-bottom:12px}
-.cred-data{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:10px}
-.cred-data-label{color:var(--gray4);letter-spacing:.5px;text-transform:uppercase;font-size:9px;margin-bottom:1px}
-.cred-data-val{font-weight:700;font-size:11px}
-.cred-id{position:absolute;bottom:18px;right:18px;font-size:9px;color:rgba(255,255,255,.2);font-weight:700;letter-spacing:1px}
-/* Contract preview */
-.contract-preview{background:#fff;border:1.5px solid var(--gray2);border-radius:11px;padding:28px 32px;font-size:12px;line-height:1.8;color:#333;max-height:420px;overflow-y:auto;white-space:pre-wrap;font-family:'Courier New',monospace}
-/* Tabs */
-.tabs{display:flex;gap:0;border-bottom:2px solid var(--gray2);margin-bottom:20px}
-.tab-btn{padding:10px 18px;border:none;background:transparent;font-family:inherit;font-size:13px;font-weight:700;color:var(--gray4);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
-.tab-btn.active{color:var(--red);border-bottom-color:var(--red)}
-/* Doc upload section */
-.doc-upload-list{display:flex;flex-direction:column;gap:8px}
-.doc-upload-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gray1);border-radius:8px;border:1.5px solid var(--gray2)}
-.doc-upload-item.uploaded{background:#F0FDF4;border-color:#BBF7D0}
-.doc-upload-label{flex:1;font-size:12px;font-weight:700;color:var(--gray7)}
-.doc-upload-item.uploaded .doc-upload-label{color:#166534}
-/* Template section */
-.template-zone{border:2px dashed var(--gray2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .15s}
+.cred-info{flex:1}
+.cred-name{font-size:14px;font-weight:900;line-height:1.2;margin-bottom:3px}
+.cred-puesto{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.cred-divider{height:1px;background:rgba(255,255,255,.08);margin-bottom:12px;position:relative;z-index:1}
+.cred-data{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;z-index:1}
+.cred-data-item{}
+.cred-data-label{color:#666;letter-spacing:.5px;text-transform:uppercase;font-size:8px;margin-bottom:2px}
+.cred-data-val{font-weight:700;font-size:10px;color:#ddd}
+.cred-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);position:relative;z-index:1}
+.cred-id{font-size:8px;color:rgba(255,255,255,.2);font-weight:700;letter-spacing:1px}
+.cred-stripe{width:40px;height:4px;background:var(--red);border-radius:2px;opacity:.6}
+/* Contract */
+.contract-preview{background:#fffef5;border:1.5px solid #E5E1C8;border-radius:10px;padding:24px 28px;font-size:12px;line-height:1.9;color:#333;max-height:380px;overflow-y:auto;white-space:pre-wrap;font-family:'Courier New',monospace}
+.template-zone{border:2.5px dashed var(--gray2);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all .15s}
 .template-zone:hover{border-color:var(--red);background:var(--red-light)}
 .template-loaded{background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:10px}
+.var-chip{display:inline-block;background:#EDE9FE;color:#6D28D9;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;font-family:monospace;margin:2px}
+/* Alta steps */
+.alta-step-content{background:#fff;border:1.5px solid var(--gray2);border-radius:12px;padding:24px}
 </style>
 </head>
 <body>
+<div id="po" style="display:none;position:fixed;inset:0;background:#111;z-index:9999;align-items:center;justify-content:center;font-family:Segoe UI,sans-serif"><div style="background:#1C1C1C;border-radius:16px;padding:36px;width:320px;text-align:center"><div style="width:48px;height:48px;background:#C0112B;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;margin:0 auto 14px">R</div><div style="font-weight:900;font-size:17px;color:#fff;margin-bottom:3px">ROANSA</div><div style="font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:22px">RH · Expedientes</div><input id="pi2" type="password" placeholder="Contrasena" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #333;background:#0a0a0a;color:#fff;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center;letter-spacing:2px"><button onclick="(function(){var v=document.getElementById('pi2').value;if(v==='Roansa2026'){sessionStorage.setItem('rh2','1');document.getElementById('po').style.display='none';}else{document.getElementById('pi2').value='';}})()" style="width:100%;padding:11px;background:#C0112B;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">Entrar</button></div></div>
+<script>
+if(sessionStorage.getItem('rh2')!=='1'){
+  var po=document.getElementById('po');
+  po.style.display='flex';
+  document.getElementById('pi2').addEventListener('keydown',function(e){if(e.key==='Enter')e.target.nextElementSibling.click();});
+}
+</script>
+
 <div id="app">
   <div id="sidebar">
     <div class="logo-area">
@@ -164,7 +165,7 @@ nav{padding:14px 10px;display:flex;flex-direction:column;gap:2px;flex:1}
       <button class="nav-btn active" id="nav-dashboard" onclick="showView('dashboard')">📊 Panel</button>
       <button class="nav-btn" id="nav-list" onclick="showView('list')">👥 Empleados</button>
       <div class="nav-section">Herramientas</div>
-      <button class="nav-btn" id="nav-alta" onclick="showView('alta')">✨ Alta con IA</button>
+      <button class="nav-btn" id="nav-alta" onclick="showView('alta')">➕ Dar de alta</button>
       <button class="nav-btn" id="nav-templates" onclick="showView('templates')">📄 Machotes</button>
     </nav>
     <div class="sidebar-foot" id="sidebar-count">Cargando…</div>
@@ -182,416 +183,401 @@ nav{padding:14px 10px;display:flex;flex-direction:column;gap:2px;flex:1}
 </div>
 
 <script>
-// ── CONSTANTS ─────────────────────────────────────────────────────
+// ── CONSTANTES ────────────────────────────────────────────────────
 const DOCS=["INE","CURP","RFC","NSS","Comprobante domicilio","Acta nacimiento","Contrato firmado","Carta de no antecedentes","Examen médico","Foto"];
 const AREAS=["Operaciones","Monitoreo","Administración","Dirección","RH"];
 const PUESTOS=["Guardia de Seguridad","Supervisor","Supervisora","Jefe de Área","Coordinador","Administrativo","Director General"];
 const CONTRATOS=["Prueba","Prueba extensión","Tiempo Indeterminado"];
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const MESES_CORTO=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 
-// ── STATE ─────────────────────────────────────────────────────────
+// ── ESTADO ────────────────────────────────────────────────────────
 let employees=[
-  {id:1,nombre:"Oscar Medina",puesto:"Supervisor",area:"Operaciones",telefono:"55 1234 5678",email:"oscar.medina@roansa.mx",curp:"MEOO850312HDFDRX01",rfc:"MEOO850312AB1",nss:"12345678901",fechaNacimiento:"1985-03-12",fechaIngreso:"2018-06-01",status:"Activo",contrato:"Tiempo Indeterminado",documentos:["INE","CURP","Comprobante domicilio","Contrato firmado"],notas:"Supervisor zona norte.",foto:null},
-  {id:2,nombre:"Enrique Huitron",puesto:"Supervisor",area:"Operaciones",telefono:"55 2345 6789",email:"enrique.huitron@roansa.mx",curp:"HUIE880715HDFTRN02",rfc:"HUIE880715CD2",nss:"23456789012",fechaNacimiento:"1988-07-15",fechaIngreso:"2019-02-15",status:"Activo",contrato:"Tiempo Indeterminado",documentos:["INE","CURP","Contrato firmado"],notas:"Supervisor zona sur.",foto:null},
-  {id:3,nombre:"Julieta Rodriguez",puesto:"Supervisora",area:"Monitoreo",telefono:"55 3456 7890",email:"julieta.rodriguez@roansa.mx",curp:"ROJU920220MDFDRX03",rfc:"ROJU920220EF3",nss:"34567890123",fechaNacimiento:"1992-02-20",fechaIngreso:"2020-09-01",status:"Activo",contrato:"Tiempo Indeterminado",documentos:["INE","CURP","Comprobante domicilio","Contrato firmado","Acta nacimiento"],notas:"Responsable del Centro de Monitoreo.",foto:null},
+  {id:1,nombre:"Oscar Medina",puesto:"Supervisor",area:"Operaciones",telefono:"55 1234 5678",email:"oscar.medina@roansa.mx",curp:"MEOO850312HDFDRX01",rfc:"MEOO850312AB1",nss:"12345678901",domicilio:"Av. Insurgentes Norte 1200, CDMX",fechaNacimiento:"1985-03-12",fechaIngreso:"2018-06-01",status:"Activo",contrato:"Tiempo Indeterminado",documentos:["INE","CURP","Comprobante domicilio","Contrato firmado"],notas:"Supervisor zona norte. Excelente desempeño.",foto:null},
+  {id:2,nombre:"Enrique Huitron",puesto:"Supervisor",area:"Operaciones",telefono:"55 2345 6789",email:"enrique.huitron@roansa.mx",curp:"HUIE880715HDFTRN02",rfc:"HUIE880715CD2",nss:"23456789012",domicilio:"Calle Madero 45, Tlalnepantla",fechaNacimiento:"1988-07-15",fechaIngreso:"2019-02-15",status:"Activo",contrato:"Tiempo Indeterminado",documentos:["INE","CURP","Contrato firmado"],notas:"Supervisor zona sur.",foto:null},
+  {id:3,nombre:"Julieta Rodriguez",puesto:"Supervisora",area:"Monitoreo",telefono:"55 3456 7890",email:"julieta.rodriguez@roansa.mx",curp:"ROJU920220MDFDRX03",rfc:"ROJU920220EF3",nss:"34567890123",domicilio:"Blvd. Manuel Ávila Camacho 88, Naucalpan",fechaNacimiento:"1992-02-20",fechaIngreso:"2020-09-01",status:"Activo",contrato:"Tiempo Indeterminado",documentos:["INE","CURP","Comprobante domicilio","Contrato firmado","Acta nacimiento"],notas:"Responsable del Centro de Monitoreo.",foto:null},
 ];
-let currentView='dashboard', selectedId=null, editingId=null, searchQ='', filterArea='', filterStatus='';
-let contractTemplate='', altaExtracted={}, altaFoto=null, altaActiveTab='scan';
-let uploadedDocs={};
+let currentView='dashboard', selectedId=null, editingId=null;
+let searchQ='', filterArea='', filterStatus='';
+let contractTemplate='';
+let altaStep=1, altaData={foto:null,documentos:[]};
 
 // ── UTILS ─────────────────────────────────────────────────────────
-function calcAge(d){if(!d)return null;const t=new Date(),b=new Date(d);let a=t.getFullYear()-b.getFullYear();const m=t.getMonth()-b.getMonth();if(m<0||(m===0&&t.getDate()<b.getDate()))a--;return a;}
-function calcYears(d){if(!d)return null;const t=new Date(),s=new Date(d);let y=t.getFullYear()-s.getFullYear();const m=t.getMonth()-s.getMonth();if(m<0||(m===0&&t.getDate()<s.getDate()))y--;return y;}
-function daysUntil(d){if(!d)return null;const today=new Date();today.setHours(0,0,0,0);const dt=new Date(d);const next=new Date(today.getFullYear(),dt.getMonth(),dt.getDate());if(next<today)next.setFullYear(today.getFullYear()+1);return Math.ceil((next-today)/864e5);}
-function fmtDate(d){if(!d)return"—";const[y,m,dd]=d.split("-");const ms=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];return parseInt(dd)+" "+ms[parseInt(m)-1]+" "+y;}
-function initials(n){return n.split(" ").slice(0,2).map(x=>x[0]).join("").toUpperCase();}
-function av(name,sz,foto){sz=sz||42;if(foto)return'<div class="avatar" style="width:'+sz+'px;height:'+sz+'px;overflow:hidden"><img src="'+foto+'" style="width:100%;height:100%;object-fit:cover"></div>';return'<div class="avatar" style="width:'+sz+'px;height:'+sz+'px;font-size:'+Math.round(sz*.35)+'px">'+initials(name)+'</div>';}
-function bdg(text,color){color=color||"gray";return'<span class="badge badge-'+color+'">'+text+'</span>';}
-function docFalt(e){return DOCS.filter(d=>!e.documentos.includes(d));}
-function todayStr(){return new Date().toISOString().split('T')[0];}
-function fmtDateLong(d){if(!d)return"—";const[y,m,dd]=d.split("-");const ms=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];return parseInt(dd)+" de "+ms[parseInt(m)-1]+" de "+y;}
+const calcAge=d=>{if(!d)return null;const t=new Date(),b=new Date(d);let a=t.getFullYear()-b.getFullYear();const m=t.getMonth()-b.getMonth();if(m<0||(m===0&&t.getDate()<b.getDate()))a--;return a;};
+const calcYears=d=>{if(!d)return null;const t=new Date(),s=new Date(d);let y=t.getFullYear()-s.getFullYear();const m=t.getMonth()-s.getMonth();if(m<0||(m===0&&t.getDate()<s.getDate()))y--;return y;};
+const daysUntil=d=>{if(!d)return null;const today=new Date();today.setHours(0,0,0,0);const dt=new Date(d);const next=new Date(today.getFullYear(),dt.getMonth(),dt.getDate());if(next<today)next.setFullYear(today.getFullYear()+1);return Math.ceil((next-today)/864e5);};
+const fmtDate=d=>{if(!d)return'—';const[y,m,dd]=d.split('-');return`${parseInt(dd)} ${MESES_CORTO[parseInt(m)-1]} ${y}`;};
+const fmtDateLong=d=>{if(!d)return'—';const[y,m,dd]=d.split('-');return`${parseInt(dd)} de ${MESES[parseInt(m)-1]} de ${y}`;};
+const todayStr=()=>new Date().toISOString().split('T')[0];
+const initials=n=>n.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const gv=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+const docFalt=e=>DOCS.filter(d=>!e.documentos.includes(d));
 
-// ── NAVIGATION ────────────────────────────────────────────────────
+function av(name,sz,foto){
+  sz=sz||42;
+  if(foto)return`<div class="avatar" style="width:${sz}px;height:${sz}px;overflow:hidden;border-radius:50%"><img src="${foto}" style="width:100%;height:100%;object-fit:cover"></div>`;
+  return`<div class="avatar" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz*.36)}px">${initials(name)}</div>`;
+}
+function bdg(text,color){return`<span class="badge badge-${color||'gray'}">${text}</span>`;}
+
+// ── NAVEGACIÓN ────────────────────────────────────────────────────
 function showView(v,id){
   currentView=v;
   if(id!=null)selectedId=id;
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  var navKey=v==='detail'?'list':v;
-  var nb=document.getElementById('nav-'+navKey);
+  const nk=v==='detail'?'list':v;
+  const nb=document.getElementById('nav-'+nk);
   if(nb)nb.classList.add('active');
   ['dashboard','list','detail','alta','templates'].forEach(x=>{document.getElementById('view-'+x).style.display='none';});
   document.getElementById('view-'+v).style.display='block';
-  if(v==='dashboard')renderDashboard();
-  if(v==='list')renderList();
-  if(v==='detail')renderDetail();
-  if(v==='alta')renderAlta();
-  if(v==='templates')renderTemplates();
+  ({dashboard:renderDashboard,list:renderList,detail:renderDetail,alta:renderAlta,templates:renderTemplates}[v]||function(){})();
   updateSidebar();
 }
 function updateSidebar(){
-  var n=employees.filter(e=>e.status==='Activo').length;
-  document.getElementById('sidebar-count').textContent=n+' empleado'+(n!==1?'s':'')+' activo'+(n!==1?'s':'');
+  const n=employees.filter(e=>e.status==='Activo').length;
+  document.getElementById('sidebar-count').textContent=`${n} empleado${n!==1?'s':''} activo${n!==1?'s':''}`;
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
 function renderDashboard(){
-  var activos=employees.filter(e=>e.status==='Activo').length;
-  var cumples=employees.map(e=>Object.assign({},e,{dias:daysUntil(e.fechaNacimiento)})).filter(e=>e.dias!==null&&e.dias<=30).sort((a,b)=>a.dias-b.dias);
-  var anivs=employees.map(e=>Object.assign({},e,{dias:daysUntil(e.fechaIngreso),anos:calcYears(e.fechaIngreso)})).filter(e=>e.dias!==null&&e.dias<=30).sort((a,b)=>a.dias-b.dias);
-  var incompletos=employees.filter(e=>docFalt(e).length>0);
-  var html='<div class="topbar"><div><h1>Panel de RH</h1><div class="topbar-sub">Resumen general · ROANSA Seguridad Privada</div></div><button class="btn btn-primary" onclick="showView(\'alta\')">✨ Alta con IA</button></div>';
-  html+='<div class="stat-grid"><div class="stat-card accent"><div class="stat-val">'+employees.length+'</div><div class="stat-label">Total empleados</div></div><div class="stat-card"><div class="stat-val">'+activos+'</div><div class="stat-label">Activos</div></div><div class="stat-card"><div class="stat-val">'+incompletos.length+'</div><div class="stat-label">Docs incompletos</div></div><div class="stat-card"><div class="stat-val">'+(cumples.length+anivs.length)+'</div><div class="stat-label">Alertas este mes</div></div></div>';
-  html+='<div class="alert-grid"><div class="alert-box"><div class="alert-title">🎂 Próximos cumpleaños '+bdg(cumples.length,'yellow')+'</div>';
-  if(!cumples.length)html+='<div style="color:var(--gray4);font-size:12px">Sin cumpleaños en los próximos 30 días.</div>';
-  else cumples.forEach(e=>{html+='<div class="alert-row">'+av(e.nombre,32,e.foto)+'<div style="flex:1"><div style="font-weight:700;font-size:12px">'+e.nombre+'</div><div style="font-size:10px;color:var(--gray4)">'+fmtDate(e.fechaNacimiento)+' · '+calcAge(e.fechaNacimiento)+' años</div></div>'+bdg(e.dias===0?'¡Hoy!':e.dias+'d',e.dias<=3?'red':'yellow')+'</div>';});
-  html+='</div><div class="alert-box"><div class="alert-title">🏅 Próximos aniversarios '+bdg(anivs.length,'blue')+'</div>';
-  if(!anivs.length)html+='<div style="color:var(--gray4);font-size:12px">Sin aniversarios en los próximos 30 días.</div>';
-  else anivs.forEach(e=>{html+='<div class="alert-row">'+av(e.nombre,32,e.foto)+'<div style="flex:1"><div style="font-weight:700;font-size:12px">'+e.nombre+'</div><div style="font-size:10px;color:var(--gray4)">Ingresó: '+fmtDate(e.fechaIngreso)+'</div></div>'+bdg((e.anos+1)+' año'+((e.anos+1)!==1?'s':''),'blue')+'</div>';});
-  html+='</div></div>';
+  const activos=employees.filter(e=>e.status==='Activo').length;
+  const cumples=employees.map(e=>({...e,dias:daysUntil(e.fechaNacimiento)})).filter(e=>e.dias!==null&&e.dias<=30).sort((a,b)=>a.dias-b.dias);
+  const anivs=employees.map(e=>({...e,dias:daysUntil(e.fechaIngreso),anos:calcYears(e.fechaIngreso)})).filter(e=>e.dias!==null&&e.dias<=30).sort((a,b)=>a.dias-b.dias);
+  const incompletos=employees.filter(e=>docFalt(e).length>0);
+
+  let h=`<div class="topbar"><div><h1>Panel de RH</h1><div class="topbar-sub">Resumen general · ROANSA Seguridad Privada</div></div><button class="btn btn-primary" onclick="showView('alta')">➕ Dar de alta</button></div>`;
+  h+=`<div class="stat-grid">
+    <div class="stat-card accent"><div class="stat-val">${employees.length}</div><div class="stat-label">Total empleados</div></div>
+    <div class="stat-card"><div class="stat-val">${activos}</div><div class="stat-label">Activos</div></div>
+    <div class="stat-card"><div class="stat-val">${incompletos.length}</div><div class="stat-label">Docs incompletos</div></div>
+    <div class="stat-card"><div class="stat-val">${cumples.length+anivs.length}</div><div class="stat-label">Alertas este mes</div></div>
+  </div>`;
+  h+=`<div class="alert-grid">
+    <div class="alert-box"><div class="alert-title">🎂 Próximos cumpleaños ${bdg(cumples.length,'yellow')}</div>
+    ${cumples.length?cumples.map(e=>`<div class="alert-row">${av(e.nombre,32,e.foto)}<div style="flex:1"><div style="font-weight:700;font-size:12px">${e.nombre}</div><div style="font-size:10px;color:var(--gray4)">${fmtDate(e.fechaNacimiento)} · ${calcAge(e.fechaNacimiento)} años</div></div>${bdg(e.dias===0?'¡Hoy!':e.dias+'d',e.dias<=3?'red':'yellow')}</div>`).join(''):'<div style="color:var(--gray4);font-size:12px">Sin cumpleaños en los próximos 30 días.</div>'}
+    </div>
+    <div class="alert-box"><div class="alert-title">🏅 Próximos aniversarios ${bdg(anivs.length,'blue')}</div>
+    ${anivs.length?anivs.map(e=>`<div class="alert-row">${av(e.nombre,32,e.foto)}<div style="flex:1"><div style="font-weight:700;font-size:12px">${e.nombre}</div><div style="font-size:10px;color:var(--gray4)">Ingresó: ${fmtDate(e.fechaIngreso)}</div></div>${bdg((e.anos+1)+' año'+((e.anos+1)!==1?'s':''),'blue')}</div>`).join(''):'<div style="color:var(--gray4);font-size:12px">Sin aniversarios en los próximos 30 días.</div>'}
+    </div>
+  </div>`;
   if(incompletos.length){
-    html+='<div class="card"><div class="section-title" style="margin-bottom:10px">⚠️ Expedientes con documentos pendientes</div>';
-    incompletos.forEach(e=>{var f=docFalt(e);html+='<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:var(--gray1);border-radius:7px;margin-bottom:7px">'+av(e.nombre,28,e.foto)+'<div style="flex:1"><div style="font-weight:700;font-size:12px">'+e.nombre+' <span style="color:var(--gray4);font-weight:400">· '+e.puesto+'</span></div><div style="font-size:10px;color:var(--red);margin-top:1px">Falta: '+f.join(', ')+'</div></div></div>';});
-    html+='</div>';
+    h+=`<div class="card"><div class="section-title" style="margin-bottom:10px">⚠️ Expedientes con documentos pendientes</div>`;
+    incompletos.forEach(e=>{const f=docFalt(e);h+=`<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:var(--gray1);border-radius:7px;margin-bottom:7px">${av(e.nombre,28,e.foto)}<div style="flex:1"><div style="font-weight:700;font-size:12px">${e.nombre} <span style="color:var(--gray4);font-weight:400">· ${e.puesto}</span></div><div style="font-size:10px;color:var(--red);margin-top:1px">Falta: ${f.join(', ')}</div></div></div>`;});
+    h+=`</div>`;
   }
-  document.getElementById('view-dashboard').innerHTML=html;
+  document.getElementById('view-dashboard').innerHTML=h;
 }
 
-// ── EMPLOYEE LIST ─────────────────────────────────────────────────
+// ── LISTA ─────────────────────────────────────────────────────────
 function renderList(){
-  var filtered=employees.filter(e=>{
-    var q=searchQ.toLowerCase();
-    return(!q||e.nombre.toLowerCase().includes(q)||e.puesto.toLowerCase().includes(q)||(e.email||'').toLowerCase().includes(q))&&(!filterArea||e.area===filterArea)&&(!filterStatus||e.status===filterStatus);
+  const filtered=employees.filter(e=>{
+    const q=searchQ.toLowerCase();
+    return(!q||e.nombre.toLowerCase().includes(q)||e.puesto.toLowerCase().includes(q)||(e.email||'').toLowerCase().includes(q))
+      &&(!filterArea||e.area===filterArea)&&(!filterStatus||e.status===filterStatus);
   });
-  var html='<div class="topbar"><div><h1>Directorio de Empleados</h1><div class="topbar-sub">'+employees.length+' empleados en total</div></div><button class="btn btn-primary" onclick="showView(\'alta\')">✨ Alta con IA</button></div>';
-  html+='<div class="search-bar"><input placeholder="Buscar por nombre, puesto, correo…" value="'+searchQ+'" oninput="searchQ=this.value;renderList()"><select onchange="filterArea=this.value;renderList()"><option value="">Todas las áreas</option>'+AREAS.map(a=>'<option value="'+a+'"'+(filterArea===a?' selected':'')+'>'+a+'</option>').join('')+'</select><select onchange="filterStatus=this.value;renderList()"><option value="">Todos</option>'+['Activo','Inactivo','Baja'].map(s=>'<option value="'+s+'"'+(filterStatus===s?' selected':'')+'>'+s+'</option>').join('')+'</select></div>';
-  html+='<div class="count-note">'+filtered.length+' empleado'+(filtered.length!==1?'s':'')+' encontrado'+(filtered.length!==1?'s':'')+'</div>';
-  html+='<div class="emp-list">';
-  if(!filtered.length)html+='<div class="empty">No se encontraron empleados.</div>';
+  let h=`<div class="topbar"><div><h1>Directorio de Empleados</h1><div class="topbar-sub">${employees.length} empleados en total</div></div><button class="btn btn-primary" onclick="showView('alta')">➕ Dar de alta</button></div>`;
+  h+=`<div class="search-bar"><input placeholder="Buscar nombre, puesto, correo…" value="${esc(searchQ)}" oninput="searchQ=this.value;renderList()"><select onchange="filterArea=this.value;renderList()"><option value="">Todas las áreas</option>${AREAS.map(a=>`<option value="${a}"${filterArea===a?' selected':''}>${a}</option>`).join('')}</select><select onchange="filterStatus=this.value;renderList()"><option value="">Todos</option>${['Activo','Inactivo','Baja'].map(s=>`<option value="${s}"${filterStatus===s?' selected':''}>${s}</option>`).join('')}</select></div>`;
+  h+=`<div class="count-note">${filtered.length} empleado${filtered.length!==1?'s':''} encontrado${filtered.length!==1?'s':''}</div><div class="emp-list">`;
+  if(!filtered.length)h+=`<div class="empty">No se encontraron empleados.</div>`;
   filtered.forEach(e=>{
-    var anos=calcYears(e.fechaIngreso),cd=daysUntil(e.fechaNacimiento),ad=daysUntil(e.fechaIngreso),df=docFalt(e).length;
-    html+='<div class="emp-card" onclick="showView(\'detail\','+e.id+')">'+av(e.nombre,44,e.foto)+'<div style="flex:1;min-width:0"><div class="emp-name">'+e.nombre+'</div><div class="emp-sub">'+e.puesto+' · '+e.area+'</div></div><div class="emp-badges">'+bdg(e.status,e.status==='Activo'?'green':'gray')+(anos>0?bdg(anos+' año'+(anos!==1?'s':''),'blue'):'')+(cd!==null&&cd<=7?bdg('🎂 Pronto','yellow'):'')+(ad!==null&&ad<=7?bdg('🏅 Aniv.','blue'):'')+(df>0?bdg('⚠️ '+df+' doc','red'):'')+'</div></div>';
+    const anos=calcYears(e.fechaIngreso),cd=daysUntil(e.fechaNacimiento),ad=daysUntil(e.fechaIngreso),df=docFalt(e).length;
+    h+=`<div class="emp-card" onclick="showView('detail',${e.id})">${av(e.nombre,44,e.foto)}<div style="flex:1;min-width:0"><div class="emp-name">${esc(e.nombre)}</div><div class="emp-sub">${esc(e.puesto)} · ${esc(e.area)}</div></div><div class="emp-badges">${bdg(e.status,e.status==='Activo'?'green':'gray')}${anos>0?bdg(anos+' año'+(anos!==1?'s':''),'blue'):''}${cd!==null&&cd<=7?bdg('🎂 Pronto','yellow'):''}${ad!==null&&ad<=7?bdg('🏅 Aniv.','blue'):''}${df>0?bdg('⚠️ '+df+' doc','red'):''}</div></div>`;
   });
-  html+='</div>';
-  document.getElementById('view-list').innerHTML=html;
+  h+=`</div>`;
+  document.getElementById('view-list').innerHTML=h;
 }
 
-// ── EMPLOYEE DETAIL ───────────────────────────────────────────────
+// ── DETALLE ───────────────────────────────────────────────────────
 function renderDetail(){
-  var e=employees.find(x=>x.id===selectedId);
+  const e=employees.find(x=>x.id===selectedId);
   if(!e){showView('list');return;}
-  var anos=calcYears(e.fechaIngreso),edad=calcAge(e.fechaNacimiento),cd=daysUntil(e.fechaNacimiento),ad=daysUntil(e.fechaIngreso);
-  var alertBanner='';
+  const anos=calcYears(e.fechaIngreso),edad=calcAge(e.fechaNacimiento),cd=daysUntil(e.fechaNacimiento),ad=daysUntil(e.fechaIngreso);
+  let alertBanner='';
   if((cd!==null&&cd<=30)||(ad!==null&&ad<=30)){
-    alertBanner='<div class="alert-banner">';
-    if(cd!==null&&cd<=30)alertBanner+='<span>🎂 Cumpleaños en <strong>'+(cd===0?'¡HOY!':cd+' días')+'</strong> · '+fmtDate(e.fechaNacimiento)+' · '+edad+' años</span>';
-    if(ad!==null&&ad<=30)alertBanner+='<span style="color:#1D4ED8">🏅 Aniversario en <strong>'+(ad===0?'¡HOY!':ad+' días')+'</strong> · '+((anos||0)+1)+' año'+((anos||0)+1!==1?'s':'')+' en ROANSA</span>';
-    alertBanner+='</div>';
+    alertBanner=`<div class="alert-banner">`;
+    if(cd!==null&&cd<=30)alertBanner+=`<span>🎂 Cumpleaños en <strong>${cd===0?'¡HOY!':cd+' días'}</strong> · ${fmtDate(e.fechaNacimiento)} · ${edad} años</span>`;
+    if(ad!==null&&ad<=30)alertBanner+=`<span style="color:#1D4ED8">🏅 Aniversario en <strong>${ad===0?'¡HOY!':ad+' días'}</strong> · ${(anos||0)+1} año${(anos||0)+1!==1?'s':''} en ROANSA</span>`;
+    alertBanner+=`</div>`;
   }
-  var docChips=DOCS.map(d=>e.documentos.includes(d)?'<div class="doc-chip doc-ok">✓ '+d+'</div>':'<div class="doc-chip doc-no">✗ '+d+'</div>').join('');
-  var html='<div class="topbar" style="margin-bottom:14px"><div><button class="btn btn-ghost btn-sm" onclick="showView(\'list\')">← Regresar</button></div><div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" onclick="openForm('+e.id+')">✏️ Editar</button><button class="btn btn-secondary btn-sm" onclick="showCredentialModal('+e.id+')">🪪 Ver credencial</button>'+(contractTemplate?'<button class="btn btn-green btn-sm" onclick="generateContract('+e.id+')">📄 Generar contrato</button>':'')+'<button class="btn btn-danger btn-sm" onclick="deleteEmp('+e.id+')">🗑 Eliminar</button></div></div>';
-  html+='<div class="hero-card">'+av(e.nombre,68,e.foto)+'<div style="flex:1"><div class="hero-name">'+e.nombre+'</div><div class="hero-sub">'+e.puesto+' · '+e.area+'</div><div class="hero-badges">'+bdg(e.status,e.status==='Activo'?'green':'gray')+bdg(e.contrato,'gray')+(anos!==null&&anos>0?bdg(anos+' año'+(anos!==1?'s':'')+' en ROANSA','blue'):'')+'</div></div></div>';
-  html+=alertBanner;
-  html+='<div class="section-grid"><div class="section-box"><div class="section-title">Datos personales</div><div class="data-row"><span class="data-label">Fecha nacimiento</span><span class="data-val">'+fmtDate(e.fechaNacimiento)+'</span></div><div class="data-row"><span class="data-label">Edad</span><span class="data-val">'+(edad?edad+' años':'—')+'</span></div><div class="data-row"><span class="data-label">CURP</span><span class="data-val">'+(e.curp||'—')+'</span></div><div class="data-row"><span class="data-label">RFC</span><span class="data-val">'+(e.rfc||'—')+'</span></div><div class="data-row"><span class="data-label">NSS</span><span class="data-val">'+(e.nss||'—')+'</span></div></div><div class="section-box"><div class="section-title">Datos laborales</div><div class="data-row"><span class="data-label">Fecha ingreso</span><span class="data-val">'+fmtDate(e.fechaIngreso)+'</span></div><div class="data-row"><span class="data-label">Antigüedad</span><span class="data-val">'+(anos!==null?(anos>0?anos+' año'+(anos!==1?'s':''):'< 1 año'):'—')+'</span></div><div class="data-row"><span class="data-label">Contrato</span><span class="data-val">'+(e.contrato||'—')+'</span></div><div class="data-row"><span class="data-label">Correo</span><span class="data-val">'+(e.email||'—')+'</span></div><div class="data-row"><span class="data-label">Teléfono</span><span class="data-val">'+(e.telefono||'—')+'</span></div></div></div>';
-  html+='<div class="section-box" style="margin-bottom:13px"><div class="section-title">Expediente de documentos</div><div class="doc-grid">'+docChips+'</div><div style="font-size:10px;color:var(--gray4);margin-top:8px">'+e.documentos.length+' de '+DOCS.length+' documentos en expediente</div></div>';
-  if(e.notas)html+='<div class="section-box"><div class="section-title">Notas</div><p style="font-size:12px;color:var(--gray7);line-height:1.6">'+e.notas+'</p></div>';
-  document.getElementById('view-detail').innerHTML=html;
+  const docChips=DOCS.map(d=>e.documentos.includes(d)?`<div class="doc-chip doc-ok">✓ ${d}</div>`:`<div class="doc-chip doc-no">✗ ${d}</div>`).join('');
+  let h=`<div class="topbar" style="margin-bottom:14px"><div><button class="btn btn-ghost btn-sm" onclick="showView('list')">← Regresar</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" onclick="openEditModal(${e.id})">✏️ Editar</button>
+      <button class="btn btn-secondary btn-sm" onclick="showCredentialModal(${e.id})">🪪 Credencial</button>
+      ${contractTemplate?`<button class="btn btn-green btn-sm" onclick="generateContract(${e.id})">📄 Generar contrato</button>`:''}
+      <button class="btn btn-danger btn-sm" onclick="deleteEmp(${e.id})">🗑 Eliminar</button>
+    </div></div>`;
+  h+=`<div class="hero-card">${av(e.nombre,70,e.foto)}<div style="flex:1"><div class="hero-name">${esc(e.nombre)}</div><div class="hero-sub">${esc(e.puesto)} · ${esc(e.area)}</div><div class="hero-badges">${bdg(e.status,e.status==='Activo'?'green':'gray')} ${bdg(e.contrato,'gray')}${anos!==null&&anos>0?' '+bdg(anos+' año'+(anos!==1?'s':'')+' en ROANSA','blue'):''}</div></div></div>`;
+  h+=alertBanner;
+  h+=`<div class="section-grid">
+    <div class="section-box"><div class="section-title">Datos personales</div>
+      <div class="data-row"><span class="data-label">Fecha nacimiento</span><span class="data-val">${fmtDate(e.fechaNacimiento)}</span></div>
+      <div class="data-row"><span class="data-label">Edad</span><span class="data-val">${edad?edad+' años':'—'}</span></div>
+      <div class="data-row"><span class="data-label">CURP</span><span class="data-val">${esc(e.curp)||'—'}</span></div>
+      <div class="data-row"><span class="data-label">RFC</span><span class="data-val">${esc(e.rfc)||'—'}</span></div>
+      <div class="data-row"><span class="data-label">NSS</span><span class="data-val">${esc(e.nss)||'—'}</span></div>
+      <div class="data-row"><span class="data-label">Domicilio</span><span class="data-val">${esc(e.domicilio)||'—'}</span></div>
+    </div>
+    <div class="section-box"><div class="section-title">Datos laborales</div>
+      <div class="data-row"><span class="data-label">Fecha ingreso</span><span class="data-val">${fmtDate(e.fechaIngreso)}</span></div>
+      <div class="data-row"><span class="data-label">Antigüedad</span><span class="data-val">${anos!==null?(anos>0?anos+' año'+(anos!==1?'s':''):'< 1 año'):'—'}</span></div>
+      <div class="data-row"><span class="data-label">Contrato</span><span class="data-val">${esc(e.contrato)||'—'}</span></div>
+      <div class="data-row"><span class="data-label">Correo</span><span class="data-val">${esc(e.email)||'—'}</span></div>
+      <div class="data-row"><span class="data-label">Teléfono</span><span class="data-val">${esc(e.telefono)||'—'}</span></div>
+    </div>
+  </div>`;
+  h+=`<div class="section-box" style="margin-bottom:13px"><div class="section-title">Expediente de documentos</div><div class="doc-grid">${docChips}</div><div style="font-size:10px;color:var(--gray4);margin-top:8px">${e.documentos.length} de ${DOCS.length} documentos en expediente</div></div>`;
+  if(e.notas)h+=`<div class="section-box"><div class="section-title">Notas</div><p style="font-size:12px;color:var(--gray7);line-height:1.6">${esc(e.notas)}</p></div>`;
+  document.getElementById('view-detail').innerHTML=h;
 }
 
-// ── AI ALTA ───────────────────────────────────────────────────────
+// ── ALTA (3 PASOS) ────────────────────────────────────────────────
 function renderAlta(){
-  var html='<div class="topbar"><div><h1>Alta con IA</h1><div class="topbar-sub">Sube documentos y Claude extrae los datos automáticamente</div></div></div>';
-  html+='<div class="tabs"><button class="tab-btn '+(altaActiveTab==='scan'?'active':'')+'" onclick="setAltaTab(\'scan\')">📷 Escanear documentos</button><button class="tab-btn '+(altaActiveTab==='form'?'active':'')+'" onclick="setAltaTab(\'form\')">📝 Completar ficha</button><button class="tab-btn '+(altaActiveTab==='docs'?'active':'')+'" onclick="setAltaTab(\'docs\')">🪪 Generar documentos</button></div>';
-  html+='<div id="alta-tab-content"></div>';
-  document.getElementById('view-alta').innerHTML=html;
-  renderAltaTab();
+  const steps=[
+    {n:1,icon:'👤',lbl:'Datos'},
+    {n:2,icon:'📋',lbl:'Documentos'},
+    {n:3,icon:'🪪',lbl:'Generar'},
+  ];
+  let h=`<div class="topbar"><div><h1>Dar de alta</h1><div class="topbar-sub">Nuevo empleado · 3 pasos</div></div></div>`;
+  h+=`<div class="steps">`;
+  steps.forEach(s=>{
+    const cls=altaStep===s.n?'active':altaStep>s.n?'done':'';
+    h+=`<div class="step ${cls}" onclick="if(${s.n}<altaStep)altaStep=${s.n},renderAlta()"><div class="step-num">${altaStep>s.n?'✓':s.icon}</div><div class="step-lbl">Paso ${s.n} · ${s.lbl}</div></div>`;
+  });
+  h+=`</div><div id="alta-content">`;
+  if(altaStep===1)h+=renderAltaStep1();
+  if(altaStep===2)h+=renderAltaStep2();
+  if(altaStep===3)h+=renderAltaStep3();
+  h+=`</div>`;
+  document.getElementById('view-alta').innerHTML=h;
 }
 
-function setAltaTab(t){altaActiveTab=t;renderAlta();}
-
-function renderAltaTab(){
-  var el=document.getElementById('alta-tab-content');
-  if(!el)return;
-  if(altaActiveTab==='scan') el.innerHTML=renderAltaScan();
-  if(altaActiveTab==='form') el.innerHTML=renderAltaForm();
-  if(altaActiveTab==='docs') el.innerHTML=renderAltaDocs();
+function renderAltaStep1(){
+  const d=altaData;
+  return`<div class="alta-step-content">
+  <div class="form-section">
+    <div class="form-section-title">📸 Foto del trabajador</div>
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      <div>
+        <div class="photo-zone" onclick="document.getElementById('foto-input').click()" style="width:110px">
+          <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="handleFotoAlta(event)">
+          ${d.foto?`<img src="${d.foto}" class="photo-preview" style="width:70px;height:70px;margin-bottom:4px">`:'<div style="font-size:28px;margin-bottom:6px">📷</div>'}
+          <div style="font-size:10px;font-weight:700;color:var(--gray4)">${d.foto?'Cambiar foto':'Subir foto'}</div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div class="form-section-title">Datos personales</div>
+        <div class="form-grid" style="margin-bottom:10px">
+          <div class="field" style="grid-column:1/-1"><label class="field-label">Nombre completo *</label><input id="a-nombre" value="${esc(d.nombre||'')}"></div>
+          <div class="field"><label class="field-label">Fecha de nacimiento</label><input id="a-nac" type="date" value="${esc(d.fechaNacimiento||'')}"></div>
+          <div class="field"><label class="field-label">CURP</label><input id="a-curp" value="${esc(d.curp||'')}" placeholder="18 caracteres"></div>
+          <div class="field"><label class="field-label">RFC</label><input id="a-rfc" value="${esc(d.rfc||'')}" placeholder="Con homoclave"></div>
+          <div class="field"><label class="field-label">NSS</label><input id="a-nss" value="${esc(d.nss||'')}" placeholder="11 dígitos"></div>
+          <div class="field"><label class="field-label">Teléfono</label><input id="a-tel" value="${esc(d.telefono||'')}"></div>
+          <div class="field"><label class="field-label">Correo electrónico</label><input id="a-email" type="email" value="${esc(d.email||'')}"></div>
+          <div class="field" style="grid-column:1/-1"><label class="field-label">Domicilio</label><input id="a-dom" value="${esc(d.domicilio||'')}" placeholder="Calle, número, colonia, ciudad"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="form-section-title">💼 Datos laborales</div>
+    <div class="form-grid">
+      <div class="field"><label class="field-label">Puesto *</label><select id="a-puesto"><option value="">Seleccionar…</option>${PUESTOS.map(p=>`<option${d.puesto===p?' selected':''}>${p}</option>`).join('')}</select></div>
+      <div class="field"><label class="field-label">Área *</label><select id="a-area"><option value="">Seleccionar…</option>${AREAS.map(a=>`<option${d.area===a?' selected':''}>${a}</option>`).join('')}</select></div>
+      <div class="field"><label class="field-label">Fecha de ingreso *</label><input id="a-ing" type="date" value="${esc(d.fechaIngreso||todayStr())}"></div>
+      <div class="field"><label class="field-label">Tipo de contrato</label><select id="a-contrato"><option value="">Seleccionar…</option>${CONTRATOS.map(c=>`<option${d.contrato===c?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label class="field-label">Status</label><select id="a-status"><option${(d.status||'Activo')==='Activo'?' selected':''}>Activo</option><option${d.status==='Inactivo'?' selected':''}>Inactivo</option><option${d.status==='Baja'?' selected':''}>Baja</option></select></div>
+    </div>
+  </div>
+  <div class="field" style="margin-bottom:18px"><label class="field-label">Notas internas</label><textarea id="a-notas" placeholder="Zona asignada, observaciones, referencias…">${esc(d.notas||'')}</textarea></div>
+  <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="altaGuardarPaso1()">Continuar → Documentos</button></div>
+  </div>`;
 }
 
-function renderAltaScan(){
-  var ex=altaExtracted;
-  var hasData=ex&&ex.nombre;
-  return'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px"><div>'+
-    '<div class="card" style="margin-bottom:14px"><div class="section-title" style="margin-bottom:12px">Cargar INE, CURP o NSS</div>'+
-    '<div class="scan-zone" id="scan-zone-main" ondragover="event.preventDefault();this.classList.add(\'drag\')" ondragleave="this.classList.remove(\'drag\')" ondrop="handleDrop(event,\'main\')" onclick="document.getElementById(\'file-main\').click()">'+
-    '<input type="file" id="file-main" accept="image/*,.pdf" onchange="handleFileSelect(event,\'main\')">'+
-    '<div class="scan-zone-icon">🔍</div>'+
-    '<div class="scan-zone-text">Arrastra o da clic para subir</div>'+
-    '<div class="scan-zone-sub">INE (frente y/o reverso), CURP impreso, NSS · PNG, JPG o PDF</div>'+
-    '</div>'+
-    '<div id="scan-result-main" style="margin-top:10px"></div></div>'+
-    '<div class="card"><div class="section-title" style="margin-bottom:12px">Foto del trabajador</div>'+
-    '<div class="scan-zone" id="scan-zone-foto" onclick="document.getElementById(\'file-foto\').click()" style="padding:16px">'+
-    '<input type="file" id="file-foto" accept="image/*" onchange="handleFotoSelect(event)">'+
-    (altaFoto?'<img src="'+altaFoto+'" style="width:80px;height:80px;border-radius:8px;object-fit:cover;margin:0 auto;display:block">':'<div class="scan-zone-icon">🤳</div>')+
-    '<div class="scan-zone-text" style="margin-top:6px">'+(altaFoto?'Cambiar foto':'Subir foto')+'</div>'+
-    '</div></div></div>'+
-    '<div>'+
-    (hasData?
-      '<div class="ai-result"><div class="ai-result-title">✅ Datos extraídos por IA</div>'+
-      Object.entries(ex).filter(([k,v])=>v).map(([k,v])=>'<div class="ai-field-preview"><span class="ai-field-key">'+k+'</span><span class="ai-field-val">'+v+'</span></div>').join('')+
-      '<div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="setAltaTab(\'form\')">Continuar a ficha →</button></div></div>'
-      :'<div style="background:var(--gray1);border-radius:10px;padding:24px;text-align:center;color:var(--gray4)"><div style="font-size:28px;margin-bottom:8px">🤖</div><div style="font-size:13px;font-weight:700">Sube un documento para que Claude extraiga los datos</div><div style="font-size:11px;margin-top:4px">INE, CURP impreso o tarjeta NSS</div></div>')+
-    '</div></div>';
+function renderAltaStep2(){
+  const d=altaData;
+  return`<div class="alta-step-content">
+  <div class="form-section">
+    <div class="form-section-title">📁 Documentos recibidos del trabajador</div>
+    <p style="font-size:12px;color:var(--gray4);margin-bottom:14px">Marca los documentos que ya tienes físicamente en el expediente.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px" id="alta-doc-btns">
+    ${DOCS.map(doc=>{const c=(d.documentos||[]).includes(doc);return`<button type="button" class="doc-toggle ${c?'checked':'unchecked'}" data-doc="${doc}" onclick="toggleAltaDoc(this,'${doc}')">${c?'✓':'○'} ${doc}</button>`;}).join('')}
+    </div>
+  </div>
+  <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:9px;padding:12px 16px;font-size:12px;color:#92400E;margin-bottom:18px">
+    💡 <strong>Consejo:</strong> No necesitas tener todos los documentos para dar de alta al empleado. Puedes completar el expediente después desde su ficha.
+  </div>
+  <div style="display:flex;justify-content:space-between">
+    <button class="btn btn-secondary" onclick="altaStep=1;renderAlta()">← Regresar</button>
+    <button class="btn btn-primary" onclick="altaGuardarPaso2()">Continuar → Generar documentos</button>
+  </div>
+  </div>`;
 }
 
-function renderAltaForm(){
-  var e=Object.assign({puesto:'',area:'',contrato:'Tiempo Indeterminado',status:'Activo',fechaIngreso:todayStr(),documentos:[],notas:''},altaExtracted||{});
-  return'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'+
-  '<div class="card"><div class="section-title" style="margin-bottom:12px">Datos personales</div>'+
-  '<div style="display:flex;flex-direction:column;gap:10px">'+
-  fld('Nombre completo *','alta-nombre',e.nombre||'')+
-  '<div class="form-grid">'+fld('Fecha nacimiento','alta-nac',e.fechaNacimiento||'','date')+fld('CURP','alta-curp',e.curp||'')+'</div>'+
-  '<div class="form-grid">'+fld('RFC','alta-rfc',e.rfc||'')+fld('NSS','alta-nss',e.nss||'')+'</div>'+
-  fld('Domicilio','alta-domicilio',e.domicilio||'')+
-  '<div class="form-grid">'+fld('Teléfono','alta-tel',e.telefono||'')+fld('Correo','alta-email',e.email||'','email')+'</div>'+
-  '</div></div>'+
-  '<div><div class="card" style="margin-bottom:14px"><div class="section-title" style="margin-bottom:12px">Datos laborales</div>'+
-  '<div style="display:flex;flex-direction:column;gap:10px">'+
-  '<div class="form-grid">'+fldSel('Puesto','alta-puesto',PUESTOS,e.puesto||'')+fldSel('Área','alta-area',AREAS,e.area||'')+'</div>'+
-  '<div class="form-grid">'+fld('Fecha ingreso','alta-ing',e.fechaIngreso||todayStr(),'date')+fldSel('Contrato','alta-contrato',CONTRATOS,e.contrato||'Tiempo Indeterminado')+'</div>'+
-  fldSel('Status','alta-status',['Activo','Inactivo','Baja'],e.status||'Activo')+
-  '</div></div>'+
-  '<div class="card"><div class="section-title" style="margin-bottom:10px">Documentos recibidos</div>'+
-  '<div style="display:flex;flex-wrap:wrap;gap:6px" id="alta-docs">'+
-  DOCS.map(d=>{var c=(e.documentos||[]).includes(d);return'<button type="button" class="doc-toggle '+(c?'checked':'unchecked')+'" data-doc="'+d+'" onclick="toggleAltaDoc(this,\''+d+'\')">'+(c?'✓':'○')+' '+d+'</button>';}).join('')+
-  '</div></div></div></div>'+
-  '<div style="display:flex;justify-content:flex-end;gap:9px;margin-top:16px">'+
-  '<button class="btn btn-secondary" onclick="setAltaTab(\'scan\')">← Regresar</button>'+
-  '<button class="btn btn-primary" onclick="saveAlta()">Guardar empleado y continuar →</button></div>';
+function renderAltaStep3(){
+  const d=altaData;
+  const e=d._saved;
+  if(!e)return`<div class="alta-step-content"><div class="empty">Primero completa los pasos anteriores.</div></div>`;
+  return`<div class="alta-step-content">
+  <div style="background:#DCFCE7;border:1.5px solid #BBF7D0;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <span style="font-size:22px">✅</span>
+    <div><div style="font-weight:800;font-size:14px;color:#166534">${esc(e.nombre)} fue dado de alta exitosamente</div><div style="font-size:11px;color:#166534;margin-top:2px">Puesto: ${esc(e.puesto)} · Área: ${esc(e.area)} · Ingreso: ${fmtDate(e.fechaIngreso)}</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div>
+      <div class="section-title" style="margin-bottom:12px">🪪 Credencial generada</div>
+      <div class="cred-wrap" style="justify-content:flex-start">${buildCredHTML(e)}</div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="printCredential(${e.id})">🖨 Imprimir credencial</button>
+      </div>
+    </div>
+    <div>
+      <div class="section-title" style="margin-bottom:12px">📄 Contrato</div>
+      ${contractTemplate
+        ?`<div style="font-size:12px;color:var(--gray7);margin-bottom:10px">Contrato listo con los datos de <strong>${esc(e.nombre)}</strong></div>
+          <button class="btn btn-green btn-sm" onclick="generateContract(${e.id})">📥 Descargar contrato</button>`
+        :`<div style="font-size:12px;color:var(--gray4);margin-bottom:10px">Aún no tienes un machote cargado.</div>
+          <button class="btn btn-secondary btn-sm" onclick="showView('templates')">Cargar machote →</button>`}
+      <div style="margin-top:20px">
+        <div class="section-title" style="margin-bottom:10px">Siguientes pasos</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-secondary" style="width:100%;justify-content:flex-start" onclick="showView('detail',${e.id})">👁 Ver expediente completo</button>
+          <button class="btn btn-secondary" style="width:100%;justify-content:flex-start" onclick="resetAlta();renderAlta()">➕ Dar de alta otro empleado</button>
+          <button class="btn btn-secondary" style="width:100%;justify-content:flex-start" onclick="showView('list')">👥 Ir al directorio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>`;
 }
 
-function renderAltaDocs(){
-  var lastId=altaExtracted._savedId;
-  var e=lastId?employees.find(x=>x.id===lastId):null;
-  if(!e)return'<div class="card" style="text-align:center;padding:40px"><div style="font-size:28px;margin-bottom:10px">⚠️</div><div style="font-weight:700;font-size:14px;color:var(--gray7)">Primero completa y guarda la ficha del empleado</div><button class="btn btn-primary" style="margin-top:14px" onclick="setAltaTab(\'form\')">Ir a ficha →</button></div>';
-  
-  var credHtml=buildCredentialHTML(e);
-  return'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'+
-  '<div>'+
-  '<div class="card" style="margin-bottom:14px"><div class="section-title" style="margin-bottom:12px">🪪 Credencial generada</div>'+
-  '<div id="cred-preview-alta">'+credHtml+'</div>'+
-  '<div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="printCredential('+e.id+')">🖨 Imprimir credencial</button></div></div>'+
-  (contractTemplate?
-    '<div class="card"><div class="section-title" style="margin-bottom:12px">📄 Contrato generado</div>'+
-    '<div style="font-size:12px;color:var(--gray7);margin-bottom:10px">Contrato listo con los datos de <strong>'+e.nombre+'</strong></div>'+
-    '<button class="btn btn-green btn-sm" onclick="generateContract('+e.id+')">📥 Descargar contrato</button></div>'
-    :'<div class="card"><div class="section-title" style="margin-bottom:10px">📄 Contrato</div>'+
-    '<div style="font-size:12px;color:var(--gray4)">Aún no has cargado un machote de contrato.</div>'+
-    '<button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="showView(\'templates\')">Cargar machote →</button></div>')+
-  '</div>'+
-  '<div class="card"><div class="section-title" style="margin-bottom:12px">Resumen del alta</div>'+
-  '<div style="display:flex;flex-direction:column;gap:8px">'+
-  '<div class="data-row"><span class="data-label">Nombre</span><span class="data-val">'+e.nombre+'</span></div>'+
-  '<div class="data-row"><span class="data-label">Puesto</span><span class="data-val">'+e.puesto+'</span></div>'+
-  '<div class="data-row"><span class="data-label">Área</span><span class="data-val">'+e.area+'</span></div>'+
-  '<div class="data-row"><span class="data-label">Ingreso</span><span class="data-val">'+fmtDate(e.fechaIngreso)+'</span></div>'+
-  '<div class="data-row"><span class="data-label">Contrato</span><span class="data-val">'+e.contrato+'</span></div>'+
-  '<div class="data-row"><span class="data-label">CURP</span><span class="data-val">'+(e.curp||'—')+'</span></div>'+
-  '</div>'+
-  '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray2)">'+
-  '<button class="btn btn-primary" style="width:100%" onclick="showView(\'detail\','+e.id+')">Ver expediente completo →</button></div>'+
-  '</div></div>';
+function handleFotoAlta(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{altaData.foto=e.target.result;renderAlta();};
+  reader.readAsDataURL(file);
 }
-
-// Form helpers
-function fld(label,id,val,type){type=type||'text';return'<div class="field"><label class="field-label">'+label+'</label><input id="'+id+'" type="'+type+'" value="'+escHtml(val||'')+'"></div>';}
-function fldSel(label,id,opts,val){return'<div class="field"><label class="field-label">'+label+'</label><select id="'+id+'"><option value="">Seleccionar…</option>'+opts.map(o=>'<option'+(val===o?' selected':'')+'>'+o+'</option>').join('')+'</select></div>';}
-function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
-function gv(id){var el=document.getElementById(id);return el?el.value:'';}
 
 function toggleAltaDoc(btn,doc){
-  var c=btn.classList.contains('checked');
+  const c=btn.classList.contains('checked');
   btn.classList.toggle('checked',!c);btn.classList.toggle('unchecked',c);
   btn.textContent=(c?'○':'✓')+' '+doc;
 }
 
-function saveAlta(){
-  var nombre=gv('alta-nombre').trim();
+function altaGuardarPaso1(){
+  const nombre=gv('a-nombre');
   if(!nombre){alert('El nombre es requerido.');return;}
-  var docs=[...document.querySelectorAll('#alta-docs .doc-toggle.checked')].map(b=>b.dataset.doc);
-  var newEmp={
-    id:Date.now(),nombre:nombre,
-    puesto:gv('alta-puesto'),area:gv('alta-area'),
-    telefono:gv('alta-tel'),email:gv('alta-email'),
-    curp:gv('alta-curp'),rfc:gv('alta-rfc'),nss:gv('alta-nss'),
-    domicilio:gv('alta-domicilio'),
-    fechaNacimiento:gv('alta-nac'),fechaIngreso:gv('alta-ing'),
-    status:gv('alta-status'),contrato:gv('alta-contrato'),
-    documentos:docs,notas:'',foto:altaFoto||null
-  };
+  const puesto=gv('a-puesto'),area=gv('a-area'),ing=gv('a-ing');
+  if(!puesto||!area){alert('El puesto y área son requeridos.');return;}
+  if(!ing){alert('La fecha de ingreso es requerida.');return;}
+  altaData={...altaData,nombre,puesto,area,
+    fechaNacimiento:gv('a-nac'),curp:gv('a-curp'),rfc:gv('a-rfc'),nss:gv('a-nss'),
+    telefono:gv('a-tel'),email:gv('a-email'),domicilio:gv('a-dom'),
+    fechaIngreso:ing,contrato:gv('a-contrato')||'Tiempo Indeterminado',
+    status:gv('a-status')||'Activo',notas:gv('a-notas')};
+  altaStep=2;renderAlta();
+}
+
+function altaGuardarPaso2(){
+  const docs=[...document.querySelectorAll('#alta-doc-btns .doc-toggle.checked')].map(b=>b.dataset.doc);
+  altaData.documentos=docs;
+  const newEmp={...altaData,id:Date.now(),documentos:docs};
+  delete newEmp._saved;
   employees.push(newEmp);
-  altaExtracted=Object.assign({},altaExtracted,{_savedId:newEmp.id});
+  altaData._saved=newEmp;
   updateSidebar();
-  setAltaTab('docs');
+  altaStep=3;renderAlta();
 }
 
-// ── AI DOCUMENT SCAN ──────────────────────────────────────────────
-async function handleFileSelect(event, zone){
-  var file=event.target.files[0];
-  if(file)await scanDocument(file,zone);
-}
-async function handleDrop(event, zone){
-  event.preventDefault();
-  document.getElementById('scan-zone-'+zone).classList.remove('drag');
-  var file=event.dataTransfer.files[0];
-  if(file)await scanDocument(file,zone);
-}
-function handleFotoSelect(event){
-  var file=event.target.files[0];
-  if(!file)return;
-  var reader=new FileReader();
-  reader.onload=function(e){altaFoto=e.target.result;renderAlta();};
-  reader.readAsDataURL(file);
-}
+function resetAlta(){altaStep=1;altaData={foto:null,documentos:[]};}
 
-async function scanDocument(file, zone){
-  var resultEl=document.getElementById('scan-result-'+zone);
-  if(!resultEl)return;
-  resultEl.innerHTML='<div style="text-align:center;padding:16px;color:var(--gray4)"><div class="spinner spinner-dark" style="width:20px;height:20px;border:2.5px solid var(--gray2);border-top-color:var(--red)"></div><div style="font-size:12px;margin-top:8px">Analizando documento con IA…</div></div>';
-
-  try{
-    var base64=await fileToBase64(file);
-    var isImage=file.type.startsWith('image/');
-    var isPDF=file.type==='application/pdf';
-    
-    var content=[];
-    if(isImage){
-      content.push({type:'image',source:{type:'base64',media_type:file.type,data:base64}});
-    } else if(isPDF){
-      content.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}});
-    }
-    content.push({type:'text',text:`Eres un asistente de RH mexicano. Analiza este documento oficial mexicano (puede ser INE, CURP, NSS, comprobante de domicilio u otro) y extrae los datos personales. 
-Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin backticks, con estos campos (deja en string vacío "" si no encuentras el dato):
-{
-  "nombre": "nombre completo de la persona",
-  "curp": "CURP de 18 caracteres",
-  "rfc": "RFC con homoclave si aparece",
-  "nss": "número de seguro social de 11 dígitos",
-  "fechaNacimiento": "en formato YYYY-MM-DD",
-  "domicilio": "dirección completa si aparece",
-  "telefono": ""
-}
-Solo extrae lo que realmente aparece en el documento. No inventes datos.`});
-
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:content}]})
-    });
-    var data=await resp.json();
-    var text=data.content.map(c=>c.text||'').join('');
-    var clean=text.replace(/```json|```/g,'').trim();
-    var parsed=JSON.parse(clean);
-    altaExtracted=Object.assign({},altaExtracted,parsed);
-    
-    var previewRows=Object.entries(parsed).filter(([k,v])=>v).map(([k,v])=>'<div class="ai-field-preview"><span class="ai-field-key">'+k+'</span><span class="ai-field-val">'+v+'</span></div>').join('');
-    resultEl.innerHTML='<div class="ai-result"><div class="ai-result-title">✅ Datos extraídos</div>'+previewRows+'<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="setAltaTab(\'form\')">Continuar a ficha →</button></div>';
-  }catch(err){
-    resultEl.innerHTML='<div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:8px;padding:12px;font-size:12px;color:var(--red)">Error al analizar el documento. Verifica que la imagen sea legible e inténtalo de nuevo.</div>';
-    console.error(err);
-  }
+// ── CREDENCIAL ────────────────────────────────────────────────────
+function buildCredHTML(e){
+  const anos=calcYears(e.fechaIngreso);
+  const fotoEl=e.foto?`<img src="${e.foto}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:22px;font-weight:900">${initials(e.nombre)}</span>`;
+  return`<div class="credential-card" id="cred-${e.id}">
+  <div class="cred-logo"><div class="cred-logo-box">R</div><div><div class="cred-logo-name">ROANSA</div><div class="cred-logo-sub">Seguridad Privada</div></div></div>
+  <div class="cred-body">
+    <div class="cred-photo">${fotoEl}</div>
+    <div class="cred-info">
+      <div class="cred-name">${esc(e.nombre)}</div>
+      <div class="cred-puesto">${esc(e.puesto)}</div>
+    </div>
+  </div>
+  <div class="cred-divider"></div>
+  <div class="cred-data">
+    <div class="cred-data-item"><div class="cred-data-label">Área</div><div class="cred-data-val">${esc(e.area)||'—'}</div></div>
+    <div class="cred-data-item"><div class="cred-data-label">Ingreso</div><div class="cred-data-val">${fmtDate(e.fechaIngreso)}</div></div>
+    <div class="cred-data-item"><div class="cred-data-label">Antigüedad</div><div class="cred-data-val">${anos!==null?(anos>0?anos+' año'+(anos!==1?'s':''):'< 1 año'):'—'}</div></div>
+    <div class="cred-data-item"><div class="cred-data-label">NSS</div><div class="cred-data-val">${esc(e.nss)||'—'}</div></div>
+  </div>
+  <div class="cred-footer"><div class="cred-id">ID-${String(e.id).slice(-6)}</div><div class="cred-stripe"></div></div>
+  </div>`;
 }
 
-function fileToBase64(file){
-  return new Promise((res,rej)=>{
-    var r=new FileReader();
-    r.onload=()=>res(r.result.split(',')[1]);
-    r.onerror=()=>rej(new Error('Error leyendo archivo'));
-    r.readAsDataURL(file);
-  });
+function showCredentialModal(id){
+  const e=employees.find(x=>x.id===id);
+  if(!e)return;
+  document.getElementById('modal-inner').innerHTML=`
+  <div class="modal-header"><div class="modal-title">🪪 Credencial — ${esc(e.nombre)}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="cred-wrap">${buildCredHTML(e)}</div>
+  <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cerrar</button><button class="btn btn-primary" onclick="printCredential(${id})">🖨 Imprimir</button></div>`;
+  document.getElementById('modal').style.display='flex';
 }
 
-// ── TEMPLATES ────────────────────────────────────────────────────
-function renderTemplates(){
-  var html='<div class="topbar"><div><h1>Machotes de documentos</h1><div class="topbar-sub">Carga tus plantillas para generación automática</div></div></div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">';
-  
-  // Contract template
-  html+='<div class="card"><div class="section-title" style="margin-bottom:12px">📄 Machote de contrato</div>';
-  if(contractTemplate){
-    html+='<div class="template-loaded"><span style="font-size:20px">✅</span><div style="flex:1"><div style="font-weight:700;font-size:13px">Contrato cargado</div><div style="font-size:11px;color:var(--gray4)">'+contractTemplate.length+' caracteres</div></div><button class="btn btn-secondary btn-sm" onclick="contractTemplate=\'\';renderTemplates()">Cambiar</button></div>';
-    html+='<div style="margin-top:10px;font-size:11px;color:var(--gray4)">Variables disponibles: <code>{{nombre}}</code> <code>{{curp}}</code> <code>{{puesto}}</code> <code>{{area}}</code> <code>{{contrato}}</code> <code>{{fecha_ingreso}}</code> <code>{{rfc}}</code> <code>{{nss}}</code> <code>{{domicilio}}</code></div>';
-    html+='<div class="contract-preview" style="margin-top:12px;max-height:200px">'+escHtml(contractTemplate.substring(0,800))+(contractTemplate.length>800?'\n…':'')+'</div>';
-  } else {
-    html+='<div class="template-zone" ondragover="event.preventDefault()" ondrop="handleContractDrop(event)" onclick="document.getElementById(\'file-contract\').click()">'+
-    '<input type="file" id="file-contract" accept=".txt,.doc,.docx,text/plain" style="display:none" onchange="handleContractFile(event)">'+
-    '<div style="font-size:28px;margin-bottom:8px">📄</div>'+
-    '<div style="font-weight:700;font-size:13px;color:var(--gray7)">Arrastra o da clic para subir tu machote</div>'+
-    '<div style="font-size:11px;color:var(--gray4);margin-top:4px">Archivo de texto .txt con variables {{nombre}}, {{curp}}, etc.</div>'+
-    '</div>';
-    html+='<div style="margin-top:12px"><button class="btn btn-secondary btn-sm" onclick="loadSampleContract()">Cargar contrato de ejemplo</button></div>';
-  }
-  html+='</div>';
-
-  // Instructions
-  html+='<div class="card"><div class="section-title" style="margin-bottom:12px">💡 Cómo usar los machotes</div>'+
-  '<div style="display:flex;flex-direction:column;gap:14px">'+
-  '<div style="display:flex;gap:10px;align-items:flex-start"><div style="width:24px;height:24px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;flex-shrink:0">1</div><div><div style="font-weight:700;font-size:13px">Prepara tu contrato en Word</div><div style="font-size:12px;color:var(--gray4);margin-top:2px">Abre tu contrato en Word, guárdalo como .txt (Texto sin formato)</div></div></div>'+
-  '<div style="display:flex;gap:10px;align-items:flex-start"><div style="width:24px;height:24px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;flex-shrink:0">2</div><div><div style="font-weight:700;font-size:13px">Reemplaza los datos variables</div><div style="font-size:12px;color:var(--gray4);margin-top:2px">Donde pone el nombre del trabajador escribe <code style="background:var(--gray1);padding:1px 4px;border-radius:3px">{{nombre}}</code>, la CURP con <code style="background:var(--gray1);padding:1px 4px;border-radius:3px">{{curp}}</code>, etc.</div></div></div>'+
-  '<div style="display:flex;gap:10px;align-items:flex-start"><div style="width:24px;height:24px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;flex-shrink:0">3</div><div><div style="font-weight:700;font-size:13px">Sube el archivo aquí</div><div style="font-size:12px;color:var(--gray4);margin-top:2px">La app lo guarda y al dar de alta un empleado genera el contrato automáticamente con sus datos</div></div></div>'+
-  '<div style="display:flex;gap:10px;align-items:flex-start"><div style="width:24px;height:24px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;flex-shrink:0">4</div><div><div style="font-weight:700;font-size:13px">Descarga el contrato listo</div><div style="font-size:12px;color:var(--gray4);margin-top:2px">En la ficha de cualquier empleado aparece el botón "Generar contrato" que descarga el .txt listo para imprimir o copiar a Word</div></div></div>'+
-  '</div></div>';
-  
-  html+='</div>';
-  document.getElementById('view-templates').innerHTML=html;
+function printCredential(id){
+  const e=employees.find(x=>x.id===id);
+  if(!e)return;
+  const fotoEl=e.foto?`<img src="${e.foto}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:22px;font-weight:900">${initials(e.nombre)}</span>`;
+  const anos=calcYears(e.fechaIngreso);
+  const w=window.open('','_blank','width=480,height=680');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Credencial ${e.nombre}</title><style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#e8e8e8;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;font-family:'Segoe UI',sans-serif}
+  .credential-card{width:320px;background:linear-gradient(145deg,#0f0f0f 0%,#1a0008 55%,#220010 100%);border-radius:16px;padding:22px 20px 18px;color:#fff;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.45)}
+  .credential-card::before{content:'';position:absolute;top:-40px;right:-40px;width:130px;height:130px;background:#C0112B;border-radius:50%;opacity:.12}
+  .cred-logo{display:flex;align-items:center;gap:8px;margin-bottom:18px;position:relative;z-index:1}
+  .cred-logo-box{width:30px;height:30px;background:#C0112B;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff}
+  .cred-logo-name{font-weight:900;font-size:13px;letter-spacing:.5px}
+  .cred-logo-sub{font-size:8px;color:#9CA3AF;letter-spacing:1px;text-transform:uppercase}
+  .cred-body{display:flex;gap:14px;align-items:flex-start;position:relative;z-index:1;margin-bottom:16px}
+  .cred-photo{width:70px;height:70px;border-radius:10px;background:linear-gradient(135deg,#C0112B,#8B0D1F);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;flex-shrink:0;overflow:hidden;border:2px solid rgba(255,255,255,.1)}
+  .cred-name{font-size:14px;font-weight:900;line-height:1.2;margin-bottom:3px}
+  .cred-puesto{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+  .cred-divider{height:1px;background:rgba(255,255,255,.08);margin-bottom:12px;position:relative;z-index:1}
+  .cred-data{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;z-index:1}
+  .cred-data-label{color:#666;letter-spacing:.5px;text-transform:uppercase;font-size:8px;margin-bottom:2px}
+  .cred-data-val{font-weight:700;font-size:10px;color:#ddd}
+  .cred-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);position:relative;z-index:1}
+  .cred-id{font-size:8px;color:rgba(255,255,255,.2);font-weight:700;letter-spacing:1px}
+  .cred-stripe{width:40px;height:4px;background:#C0112B;border-radius:2px;opacity:.6}
+  @media print{body{background:transparent}}
+  </style></head><body>
+  <div class="credential-card">
+    <div class="cred-logo"><div class="cred-logo-box">R</div><div><div class="cred-logo-name">ROANSA</div><div class="cred-logo-sub">Seguridad Privada</div></div></div>
+    <div class="cred-body"><div class="cred-photo">${fotoEl}</div><div><div class="cred-name">${esc(e.nombre)}</div><div class="cred-puesto">${esc(e.puesto)}</div></div></div>
+    <div class="cred-divider"></div>
+    <div class="cred-data">
+      <div><div class="cred-data-label">Área</div><div class="cred-data-val">${esc(e.area)||'—'}</div></div>
+      <div><div class="cred-data-label">Ingreso</div><div class="cred-data-val">${fmtDate(e.fechaIngreso)}</div></div>
+      <div><div class="cred-data-label">Antigüedad</div><div class="cred-data-val">${anos!==null?(anos>0?anos+' año'+(anos!==1?'s':''):'< 1 año'):'—'}</div></div>
+      <div><div class="cred-data-label">NSS</div><div class="cred-data-val">${esc(e.nss)||'—'}</div></div>
+    </div>
+    <div class="cred-footer"><div class="cred-id">ID-${String(e.id).slice(-6)}</div><div class="cred-stripe"></div></div>
+  </div>
+  <script>setTimeout(()=>window.print(),600);<\/script>
+  </body></html>`);
+  w.document.close();
 }
 
-async function handleContractFile(event){
-  var file=event.target.files[0];
-  if(!file)return;
-  var text=await file.text();
-  contractTemplate=text;
-  renderTemplates();
-}
-async function handleContractDrop(event){
-  event.preventDefault();
-  var file=event.dataTransfer.files[0];
-  if(!file)return;
-  var text=await file.text();
-  contractTemplate=text;
-  renderTemplates();
-}
-function loadSampleContract(){
-  contractTemplate=`CONTRATO INDIVIDUAL DE TRABAJO
-
-En la Ciudad de México, a {{fecha_ingreso}}, se celebra el presente Contrato Individual de Trabajo entre:
-
-PATRÓN: ROANSA SEGURIDAD PRIVADA S.A. DE C.V., representada por su Directora General.
-
-TRABAJADOR: {{nombre}}, con CURP {{curp}}, RFC {{rfc}}, NSS {{nss}}, con domicilio en {{domicilio}}.
-
-CLÁUSULAS:
-
-PRIMERA.- El trabajador se obliga a prestar sus servicios como {{puesto}} en el área de {{area}}.
-
-SEGUNDA.- La duración del presente contrato es de tipo {{contrato}}, con inicio en fecha {{fecha_ingreso}}.
-
-TERCERA.- El lugar de trabajo será en las instalaciones asignadas por ROANSA Seguridad Privada y en los clientes donde sea requerido su servicio.
-
-CUARTA.- El trabajador se compromete a cumplir con los reglamentos internos, normas de seguridad y procedimientos establecidos por la empresa.
-
-QUINTA.- Ambas partes se someten a las disposiciones de la Ley Federal del Trabajo para todo lo no previsto en este contrato.
-
-
-_____________________________          _____________________________
-ROANSA SEGURIDAD PRIVADA               {{nombre}}
-Directora General                      Trabajador(a)`;
-  renderTemplates();
-}
-
-// ── CONTRACT GENERATION ───────────────────────────────────────────
+// ── CONTRATO ──────────────────────────────────────────────────────
 function generateContract(id){
-  var e=employees.find(x=>x.id===id);
-  if(!e||!contractTemplate){alert('No hay machote de contrato cargado.');return;}
-  var filled=contractTemplate
+  const e=employees.find(x=>x.id===id);
+  if(!e||!contractTemplate){alert('No hay machote cargado. Ve a la sección Machotes.');return;}
+  const filled=contractTemplate
     .replace(/\{\{nombre\}\}/g,e.nombre||'')
     .replace(/\{\{curp\}\}/g,e.curp||'')
     .replace(/\{\{rfc\}\}/g,e.rfc||'')
@@ -599,182 +585,175 @@ function generateContract(id){
     .replace(/\{\{puesto\}\}/g,e.puesto||'')
     .replace(/\{\{area\}\}/g,e.area||'')
     .replace(/\{\{contrato\}\}/g,e.contrato||'')
-    .replace(/\{\{fecha_ingreso\}\}/g,fmtDateLong(e.fechaIngreso)||'')
-    .replace(/\{\{domicilio\}\}/g,e.domicilio||'');
-
-  // Download as text file
-  var blob=new Blob([filled],{type:'text/plain;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
+    .replace(/\{\{fecha_ingreso\}\}/g,fmtDateLong(e.fechaIngreso))
+    .replace(/\{\{domicilio\}\}/g,e.domicilio||'')
+    .replace(/\{\{telefono\}\}/g,e.telefono||'')
+    .replace(/\{\{email\}\}/g,e.email||'');
+  const blob=new Blob([filled],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
   a.href=url;a.download='Contrato_'+e.nombre.replace(/\s+/g,'_')+'.txt';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
-// ── CREDENTIAL ────────────────────────────────────────────────────
-function buildCredentialHTML(e){
-  var anos=calcYears(e.fechaIngreso);
-  var fotoEl=e.foto?'<img src="'+e.foto+'" style="width:100%;height:100%;object-fit:cover">':initials(e.nombre);
-  return'<div class="credential-card" id="cred-'+e.id+'">'+
-    '<div class="cred-logo"><div class="cred-logo-box">R</div><div><div class="cred-logo-text">ROANSA</div><div class="cred-logo-sub">Seguridad Privada</div></div></div>'+
-    '<div class="cred-photo">'+fotoEl+'</div>'+
-    '<div class="cred-name">'+e.nombre+'</div>'+
-    '<div class="cred-puesto">'+e.puesto+'</div>'+
-    '<div class="cred-divider"></div>'+
-    '<div class="cred-data">'+
-    '<div><div class="cred-data-label">Área</div><div class="cred-data-val">'+(e.area||'—')+'</div></div>'+
-    '<div><div class="cred-data-label">Ingreso</div><div class="cred-data-val">'+fmtDate(e.fechaIngreso)+'</div></div>'+
-    '<div><div class="cred-data-label">Antigüedad</div><div class="cred-data-val">'+(anos!==null?(anos>0?anos+' año'+(anos!==1?'s':''):'< 1 año'):'—')+'</div></div>'+
-    '<div><div class="cred-data-label">NSS</div><div class="cred-data-val">'+(e.nss||'—')+'</div></div>'+
-    '</div>'+
-    '<div class="cred-id">ID-'+String(e.id).slice(-6)+'</div>'+
-    '</div>';
-}
-
-function showCredentialModal(id){
-  var e=employees.find(x=>x.id===id);
-  if(!e)return;
-  document.getElementById('modal-inner').innerHTML=
-    '<div class="modal-header"><div class="modal-title">🪪 Credencial de '+e.nombre+'</div><button class="modal-close" onclick="closeModal()">✕</button></div>'+
-    '<div style="display:flex;justify-content:center;padding:10px 0">'+buildCredentialHTML(e)+'</div>'+
-    '<div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cerrar</button><button class="btn btn-primary" onclick="printCredential('+id+')">🖨 Imprimir</button></div>';
-  document.getElementById('modal').style.display='flex';
-}
-
-function printCredential(id){
-  var e=employees.find(x=>x.id===id);
-  if(!e)return;
-  var w=window.open('','_blank','width=420,height=600');
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Credencial '+e.nombre+'</title><style>'+
-    'body{margin:0;padding:20px;background:#f0f0f0;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:Segoe UI,sans-serif}'+
-    '.credential-card{width:340px;background:linear-gradient(145deg,#111 0%,#1a0008 60%,#2a0010 100%);border-radius:16px;padding:22px 20px;color:#fff;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4)}'+
-    '.credential-card::before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:#C0112B;border-radius:50%;opacity:.15}'+
-    '.cred-logo{display:flex;align-items:center;gap:8px;margin-bottom:16px}'+
-    '.cred-logo-box{width:28px;height:28px;background:#C0112B;border-radius:5px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff}'+
-    '.cred-logo-text{font-weight:900;font-size:12px;letter-spacing:.5px}'+
-    '.cred-logo-sub{font-size:8px;color:#9CA3AF;letter-spacing:1px;text-transform:uppercase}'+
-    '.cred-photo{width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,#C0112B,#8B0D1F);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;margin-bottom:12px;overflow:hidden}'+
-    '.cred-photo img{width:100%;height:100%;object-fit:cover}'+
-    '.cred-name{font-size:15px;font-weight:900;line-height:1.2;margin-bottom:3px}'+
-    '.cred-puesto{font-size:10px;color:#9CA3AF;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}'+
-    '.cred-divider{height:1px;background:rgba(255,255,255,.1);margin-bottom:12px}'+
-    '.cred-data{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:10px}'+
-    '.cred-data-label{color:#9CA3AF;letter-spacing:.5px;text-transform:uppercase;font-size:9px;margin-bottom:1px}'+
-    '.cred-data-val{font-weight:700;font-size:11px;color:#fff}'+
-    '.cred-id{position:absolute;bottom:18px;right:18px;font-size:9px;color:rgba(255,255,255,.2);font-weight:700;letter-spacing:1px}'+
-    '@media print{body{background:transparent}}</style></head><body>'+
-    buildCredentialHTML(e).replace('class="credential-card"','class="credential-card" style=""')+
-    '
-<div id="pwd-overlay" style="position:fixed;inset:0;background:#111;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:Segoe UI,sans-serif">
-  <div style="background:#1C1C1C;border-radius:16px;padding:36px;width:100%;max-width:340px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)">
-    <div style="width:52px;height:52px;background:#C0112B;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;margin:0 auto 16px">R</div>
-    <div style="font-weight:900;font-size:18px;color:#fff;margin-bottom:4px">ROANSA</div>
-    <div style="font-size:10px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px">RH · Expedientes</div>
-    <input id="pwd-input" type="password" placeholder="Contraseña de acceso"
-      style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid #333;background:#0a0a0a;color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box;text-align:center;letter-spacing:2px">
-    <button id="pwd-btn" style="width:100%;padding:12px;background:#C0112B;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px">Entrar</button>
-    <div id="pwd-err" style="color:#ff6b7a;font-size:12px;min-height:16px"></div>
-  </div>
-</div>
-<script>
-(function(){
-  var o=document.getElementById('pwd-overlay');
-  var i=document.getElementById('pwd-input');
-  var b=document.getElementById('pwd-btn');
-  var e=document.getElementById('pwd-err');
-  if(sessionStorage.getItem('rh_ok')==='1'){o.style.display='none';return;}
-  function chk(){
-    if(i.value==='Roansa2026'){
-      sessionStorage.setItem('rh_ok','1');
-      o.style.display='none';
-    } else {
-      e.textContent='Contraseña incorrecta';
-      i.value='';
-      i.focus();
-      setTimeout(function(){e.textContent='';},2500);
-    }
+// ── MACHOTES ──────────────────────────────────────────────────────
+function renderTemplates(){
+  const vars=['nombre','curp','rfc','nss','puesto','area','contrato','fecha_ingreso','domicilio','telefono','email'];
+  let h=`<div class="topbar"><div><h1>Machotes de documentos</h1><div class="topbar-sub">Plantillas para generación automática</div></div></div>`;
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">`;
+  
+  // Left: upload
+  h+=`<div><div class="card" style="margin-bottom:14px"><div class="section-title" style="margin-bottom:12px">📄 Machote de contrato</div>`;
+  if(contractTemplate){
+    h+=`<div class="template-loaded" style="margin-bottom:12px"><span style="font-size:22px">✅</span><div style="flex:1"><div style="font-weight:700;font-size:13px">Contrato cargado</div><div style="font-size:11px;color:var(--gray4)">${contractTemplate.length.toLocaleString()} caracteres</div></div><button class="btn btn-secondary btn-sm" onclick="contractTemplate='';renderTemplates()">Cambiar</button></div>`;
+    h+=`<div class="contract-preview">${esc(contractTemplate.substring(0,600))}${contractTemplate.length>600?'\n…':''}</div>`;
+  } else {
+    h+=`<div class="template-zone" ondragover="event.preventDefault()" ondrop="handleContractDrop(event)" onclick="document.getElementById('fc').click()">
+      <input type="file" id="fc" accept=".txt,text/plain" style="display:none" onchange="handleContractFile(event)">
+      <div style="font-size:32px;margin-bottom:8px">📄</div>
+      <div style="font-weight:700;font-size:13px;color:var(--gray7)">Arrastra o da clic para subir</div>
+      <div style="font-size:11px;color:var(--gray4);margin-top:4px">Archivo .txt con variables {{nombre}}, {{curp}}, etc.</div>
+    </div>
+    <div style="margin-top:10px"><button class="btn btn-secondary btn-sm" onclick="loadSampleContract()">📝 Cargar ejemplo de contrato</button></div>`;
   }
-  b.addEventListener('click',chk);
-  i.addEventListener('keydown',function(ev){if(ev.key==='Enter')chk();});
-  i.focus();
-})();
-</script>
+  h+=`</div></div>`;
 
-</body></html>');
-  w.document.close();
-  setTimeout(()=>w.print(),500);
+  // Right: instructions
+  h+=`<div><div class="card"><div class="section-title" style="margin-bottom:14px">💡 Cómo preparar tu machote</div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;gap:10px"><div style="width:26px;height:26px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;flex-shrink:0">1</div><div><div style="font-weight:700;font-size:12px;margin-bottom:3px">Abre tu contrato en Word</div><div style="font-size:11px;color:var(--gray4)">El contrato que ya usas normalmente.</div></div></div>
+    <div style="display:flex;gap:10px"><div style="width:26px;height:26px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;flex-shrink:0">2</div><div><div style="font-weight:700;font-size:12px;margin-bottom:3px">Reemplaza los datos del trabajador</div><div style="font-size:11px;color:var(--gray4);margin-bottom:6px">Donde va el nombre, escribe <span class="var-chip">{{nombre}}</span>. Donde va la CURP, escribe <span class="var-chip">{{curp}}</span>, y así.</div><div style="display:flex;flex-wrap:wrap;gap:4px">${vars.map(v=>`<span class="var-chip">{{${v}}}</span>`).join('')}</div></div></div>
+    <div style="display:flex;gap:10px"><div style="width:26px;height:26px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;flex-shrink:0">3</div><div><div style="font-weight:700;font-size:12px;margin-bottom:3px">Guarda como .txt</div><div style="font-size:11px;color:var(--gray4)">En Word: Archivo → Guardar como → Texto sin formato (.txt)</div></div></div>
+    <div style="display:flex;gap:10px"><div style="width:26px;height:26px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;flex-shrink:0">4</div><div><div style="font-weight:700;font-size:12px;margin-bottom:3px">Súbelo aquí</div><div style="font-size:11px;color:var(--gray4)">Desde ahí en adelante, al dar de alta un empleado o en su ficha, aparece el botón "Generar contrato" que descarga el contrato ya lleno.</div></div></div>
+  </div>
+  </div></div>`;
+  h+=`</div>`;
+  document.getElementById('view-templates').innerHTML=h;
 }
 
-// ── FORM MODAL (edit existing) ────────────────────────────────────
-function openForm(id){
+async function handleContractFile(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  contractTemplate=await file.text();
+  renderTemplates();
+}
+async function handleContractDrop(e){
+  e.preventDefault();
+  const file=e.dataTransfer.files[0];
+  if(!file)return;
+  contractTemplate=await file.text();
+  renderTemplates();
+}
+function loadSampleContract(){
+  contractTemplate=`CONTRATO INDIVIDUAL DE TRABAJO
+
+En la Ciudad de México, a {{fecha_ingreso}}, comparecen:
+
+PATRÓN: ROANSA SEGURIDAD PRIVADA S.A. DE C.V., representada en este acto por su Directora General, en adelante "LA EMPRESA".
+
+TRABAJADOR: {{nombre}}, con CURP {{curp}}, RFC {{rfc}}, Número de Seguro Social {{nss}}, con domicilio en {{domicilio}}, teléfono {{telefono}}, en adelante "EL TRABAJADOR".
+
+Ambas partes acuerdan celebrar el presente Contrato Individual de Trabajo, al tenor de las siguientes:
+
+C L Á U S U L A S
+
+PRIMERA. PUESTO Y FUNCIONES
+El TRABAJADOR se obliga a prestar sus servicios como {{puesto}} en el área de {{area}}, desempeñando las actividades inherentes a dicho puesto conforme a las instrucciones de LA EMPRESA.
+
+SEGUNDA. DURACIÓN DEL CONTRATO
+La duración del presente contrato es de tipo {{contrato}}, con fecha de inicio {{fecha_ingreso}}.
+
+TERCERA. LUGAR DE TRABAJO
+El TRABAJADOR prestará sus servicios en las instalaciones que designe LA EMPRESA, incluyendo las ubicaciones de los clientes de ROANSA Seguridad Privada en la Ciudad de México y área metropolitana.
+
+CUARTA. JORNADA DE TRABAJO
+La jornada de trabajo será conforme a lo establecido por la Ley Federal del Trabajo y los turnos asignados por LA EMPRESA.
+
+QUINTA. OBLIGACIONES DEL TRABAJADOR
+El TRABAJADOR se compromete a cumplir con los reglamentos internos, normas de seguridad, uniformes y procedimientos establecidos por LA EMPRESA, así como a guardar la confidencialidad de la información de los clientes.
+
+SEXTA. DISPOSICIONES GENERALES
+Para todo lo no previsto en este contrato, ambas partes se someten a las disposiciones de la Ley Federal del Trabajo vigente.
+
+Leído el presente contrato y estando conformes con su contenido, lo firman por duplicado en la Ciudad de México, a la fecha indicada en la cláusula segunda.
+
+
+_________________________________          _________________________________
+   ROANSA SEGURIDAD PRIVADA                        {{nombre}}
+       Directora General                             Trabajador(a)
+
+                              TESTIGOS:
+
+_________________________________          _________________________________
+           Nombre y firma                              Nombre y firma`;
+  renderTemplates();
+}
+
+// ── MODAL DE EDICIÓN ──────────────────────────────────────────────
+function openEditModal(id){
   editingId=id;
-  var e=id?employees.find(x=>x.id===id):{nombre:'',puesto:'',area:'',telefono:'',email:'',curp:'',rfc:'',nss:'',fechaNacimiento:'',fechaIngreso:'',status:'Activo',contrato:'Tiempo Indeterminado',documentos:[],notas:'',foto:null};
-  var docBtns=DOCS.map(d=>{var c=e.documentos.includes(d);return'<button type="button" class="doc-toggle '+(c?'checked':'unchecked')+'" data-doc="'+d+'" onclick="toggleDoc(this,\''+d+'\')">'+(c?'✓':'○')+' '+d+'</button>';}).join('');
-  var html='<div class="modal-header"><div class="modal-title">'+(id?'Editar empleado':'Nuevo empleado')+'</div><button class="modal-close" onclick="closeModal()">✕</button></div>';
-  html+='<div class="form-section"><div class="form-section-title">Datos personales</div><div style="margin-bottom:9px"><div class="field"><label class="field-label">Nombre completo *</label><input id="f-nombre" value="'+escHtml(e.nombre)+'"></div></div><div class="form-grid"><div class="field"><label class="field-label">Puesto</label><select id="f-puesto"><option value="">Seleccionar…</option>'+PUESTOS.map(p=>'<option'+(e.puesto===p?' selected':'')+'>'+p+'</option>').join('')+'</select></div><div class="field"><label class="field-label">Área</label><select id="f-area"><option value="">Seleccionar…</option>'+AREAS.map(a=>'<option'+(e.area===a?' selected':'')+'>'+a+'</option>').join('')+'</select></div><div class="field"><label class="field-label">Fecha nacimiento</label><input id="f-nac" type="date" value="'+escHtml(e.fechaNacimiento)+'"></div><div class="field"><label class="field-label">Teléfono</label><input id="f-tel" value="'+escHtml(e.telefono)+'"></div><div class="field"><label class="field-label">CURP</label><input id="f-curp" value="'+escHtml(e.curp)+'"></div><div class="field"><label class="field-label">RFC</label><input id="f-rfc" value="'+escHtml(e.rfc)+'"></div><div class="field"><label class="field-label">NSS</label><input id="f-nss" value="'+escHtml(e.nss)+'"></div><div class="field"><label class="field-label">Correo</label><input id="f-email" type="email" value="'+escHtml(e.email)+'"></div></div></div>';
-  html+='<div class="form-section"><div class="form-section-title">Datos laborales</div><div class="form-grid"><div class="field"><label class="field-label">Fecha ingreso</label><input id="f-ing" type="date" value="'+escHtml(e.fechaIngreso)+'"></div><div class="field"><label class="field-label">Status</label><select id="f-status"><option'+(e.status==='Activo'?' selected':'')+'>Activo</option><option'+(e.status==='Inactivo'?' selected':'')+'>Inactivo</option><option'+(e.status==='Baja'?' selected':'')+'>Baja</option></select></div><div class="field" style="grid-column:1/-1"><label class="field-label">Tipo de contrato</label><select id="f-contrato"><option value="">Seleccionar…</option>'+CONTRATOS.map(c=>'<option'+(e.contrato===c?' selected':'')+'>'+c+'</option>').join('')+'</select></div></div></div>';
-  html+='<div class="form-section"><div class="form-section-title">Documentos</div><div style="display:flex;flex-wrap:wrap;gap:7px" id="doc-btns">'+docBtns+'</div></div>';
-  html+='<div class="form-section"><div class="field"><label class="field-label">Notas</label><textarea id="f-notas" rows="2">'+escHtml(e.notas)+'</textarea></div></div>';
-  html+='<div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveForm()">💾 Guardar</button></div>';
-  document.getElementById('modal-inner').innerHTML=html;
+  const e=employees.find(x=>x.id===id)||{nombre:'',puesto:'',area:'',telefono:'',email:'',curp:'',rfc:'',nss:'',domicilio:'',fechaNacimiento:'',fechaIngreso:'',status:'Activo',contrato:'Tiempo Indeterminado',documentos:[],notas:'',foto:null};
+  const docBtns=DOCS.map(d=>{const c=e.documentos.includes(d);return`<button type="button" class="doc-toggle ${c?'checked':'unchecked'}" data-doc="${d}" onclick="toggleDoc(this,'${d}')">${c?'✓':'○'} ${d}</button>`;}).join('');
+  document.getElementById('modal-inner').innerHTML=`
+  <div class="modal-header"><div class="modal-title">✏️ Editar — ${esc(e.nombre)}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="form-section"><div class="form-section-title">Datos personales</div>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label class="field-label">Nombre completo *</label><input id="f-nombre" value="${esc(e.nombre)}"></div>
+      <div class="field"><label class="field-label">Fecha nacimiento</label><input id="f-nac" type="date" value="${esc(e.fechaNacimiento)}"></div>
+      <div class="field"><label class="field-label">Teléfono</label><input id="f-tel" value="${esc(e.telefono)}"></div>
+      <div class="field"><label class="field-label">CURP</label><input id="f-curp" value="${esc(e.curp)}"></div>
+      <div class="field"><label class="field-label">RFC</label><input id="f-rfc" value="${esc(e.rfc)}"></div>
+      <div class="field"><label class="field-label">NSS</label><input id="f-nss" value="${esc(e.nss)}"></div>
+      <div class="field"><label class="field-label">Correo</label><input id="f-email" type="email" value="${esc(e.email)}"></div>
+      <div class="field" style="grid-column:1/-1"><label class="field-label">Domicilio</label><input id="f-dom" value="${esc(e.domicilio||'')}"></div>
+    </div>
+  </div>
+  <div class="form-section"><div class="form-section-title">Datos laborales</div>
+    <div class="form-grid">
+      <div class="field"><label class="field-label">Puesto</label><select id="f-puesto"><option value="">—</option>${PUESTOS.map(p=>`<option${e.puesto===p?' selected':''}>${p}</option>`).join('')}</select></div>
+      <div class="field"><label class="field-label">Área</label><select id="f-area"><option value="">—</option>${AREAS.map(a=>`<option${e.area===a?' selected':''}>${a}</option>`).join('')}</select></div>
+      <div class="field"><label class="field-label">Fecha ingreso</label><input id="f-ing" type="date" value="${esc(e.fechaIngreso)}"></div>
+      <div class="field"><label class="field-label">Status</label><select id="f-status"><option${e.status==='Activo'?' selected':''}>Activo</option><option${e.status==='Inactivo'?' selected':''}>Inactivo</option><option${e.status==='Baja'?' selected':''}>Baja</option></select></div>
+      <div class="field" style="grid-column:1/-1"><label class="field-label">Tipo de contrato</label><select id="f-contrato"><option value="">—</option>${CONTRATOS.map(c=>`<option${e.contrato===c?' selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+  </div>
+  <div class="form-section"><div class="form-section-title">Documentos</div><div style="display:flex;flex-wrap:wrap;gap:7px" id="doc-btns">${docBtns}</div></div>
+  <div class="field" style="margin-bottom:0"><label class="field-label">Notas</label><textarea id="f-notas" rows="2">${esc(e.notas)}</textarea></div>
+  <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveEdit()">💾 Guardar cambios</button></div>`;
   document.getElementById('modal').style.display='flex';
 }
-function toggleDoc(btn,doc){var c=btn.classList.contains('checked');btn.classList.toggle('checked',!c);btn.classList.toggle('unchecked',c);btn.textContent=(c?'○':'✓')+' '+doc;}
-function saveForm(){
-  var nombre=document.getElementById('f-nombre').value.trim();
+
+function toggleDoc(btn,doc){const c=btn.classList.contains('checked');btn.classList.toggle('checked',!c);btn.classList.toggle('unchecked',c);btn.textContent=(c?'○':'✓')+' '+doc;}
+
+function saveEdit(){
+  const nombre=gv('f-nombre');
   if(!nombre){alert('El nombre es requerido.');return;}
-  var docs=[...document.querySelectorAll('#doc-btns .doc-toggle.checked')].map(b=>b.dataset.doc);
-  var data={nombre,puesto:gv('f-puesto'),area:gv('f-area'),telefono:gv('f-tel'),email:gv('f-email'),curp:gv('f-curp'),rfc:gv('f-rfc'),nss:gv('f-nss'),fechaNacimiento:gv('f-nac'),fechaIngreso:gv('f-ing'),status:gv('f-status'),contrato:gv('f-contrato'),notas:gv('f-notas'),documentos:docs};
-  if(editingId){var i=employees.findIndex(e=>e.id===editingId);employees[i]=Object.assign({},employees[i],data);selectedId=editingId;}
-  else{var newE=Object.assign({},data,{id:Date.now(),foto:null});employees.push(newE);selectedId=newE.id;}
+  const docs=[...document.querySelectorAll('#doc-btns .doc-toggle.checked')].map(b=>b.dataset.doc);
+  const i=employees.findIndex(e=>e.id===editingId);
+  if(i>-1){
+    employees[i]={...employees[i],nombre,puesto:gv('f-puesto'),area:gv('f-area'),
+      telefono:gv('f-tel'),email:gv('f-email'),curp:gv('f-curp'),rfc:gv('f-rfc'),
+      nss:gv('f-nss'),domicilio:gv('f-dom'),fechaNacimiento:gv('f-nac'),
+      fechaIngreso:gv('f-ing'),status:gv('f-status'),contrato:gv('f-contrato'),
+      notas:gv('f-notas'),documentos:docs};
+  }
   closeModal();
-  if(editingId)showView('detail',selectedId);else showView('list');
-}
-function closeModal(){document.getElementById('modal').style.display='none';}
-function deleteEmp(id){
-  var e=employees.find(x=>x.id===id);
-  if(!confirm('¿Eliminar el expediente de '+e.nombre+'?\nEsta acción no se puede deshacer.'))return;
-  employees=employees.filter(x=>x.id!==id);showView('list');
+  renderDetail();
+  updateSidebar();
 }
 
-// ── INIT ──────────────────────────────────────────────────────────
+function deleteEmp(id){
+  const e=employees.find(x=>x.id===id);
+  if(!confirm(`¿Eliminar el expediente de ${e.nombre}?\nEsta acción no se puede deshacer.`))return;
+  employees=employees.filter(x=>x.id!==id);
+  showView('list');
+}
+
+function closeModal(){document.getElementById('modal').style.display='none';}
+
+// ── INIT ─────────────────────────────────────────────────────────
 showView('dashboard');
 </script>
-
-<div id="pwd-overlay" style="position:fixed;inset:0;background:#111;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:Segoe UI,sans-serif">
-  <div style="background:#1C1C1C;border-radius:16px;padding:36px;width:100%;max-width:340px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)">
-    <div style="width:52px;height:52px;background:#C0112B;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;margin:0 auto 16px">R</div>
-    <div style="font-weight:900;font-size:18px;color:#fff;margin-bottom:4px">ROANSA</div>
-    <div style="font-size:10px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px">RH · Expedientes</div>
-    <input id="pwd-input" type="password" placeholder="Contraseña de acceso"
-      style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid #333;background:#0a0a0a;color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box;text-align:center;letter-spacing:2px">
-    <button id="pwd-btn" style="width:100%;padding:12px;background:#C0112B;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px">Entrar</button>
-    <div id="pwd-err" style="color:#ff6b7a;font-size:12px;min-height:16px"></div>
-  </div>
-</div>
-<script>
-(function(){
-  var o=document.getElementById('pwd-overlay');
-  var i=document.getElementById('pwd-input');
-  var b=document.getElementById('pwd-btn');
-  var e=document.getElementById('pwd-err');
-  if(sessionStorage.getItem('rh_ok')==='1'){o.style.display='none';return;}
-  function chk(){
-    if(i.value==='Roansa2026'){
-      sessionStorage.setItem('rh_ok','1');
-      o.style.display='none';
-    } else {
-      e.textContent='Contraseña incorrecta';
-      i.value='';
-      i.focus();
-      setTimeout(function(){e.textContent='';},2500);
-    }
-  }
-  b.addEventListener('click',chk);
-  i.addEventListener('keydown',function(ev){if(ev.key==='Enter')chk();});
-  i.focus();
-})();
-</script>
-
 </body>
 </html>
