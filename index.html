@@ -535,7 +535,7 @@ function SE(){
 function DE(id){var em=employees.find(function(x){return x.id===id;});if(!confirm('Eliminar expediente de '+em.nombre+'?'))return;employees=employees.filter(function(x){return x.id!==id;});V('list');}
 function CM(){document.getElementById('modal').style.display='none';}
 
-document.addEventListener('DOMContentLoaded',function(){V('dashboard');});
+V('dashboard');
 } // end else (authenticated)
 </script>
 </body>
