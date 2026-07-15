@@ -191,7 +191,7 @@ let employees=[
 let currentView='dashboard', selectedId=null, editingId=null;
 let searchQ='', filterArea='', filterStatus='';
 let contractTemplate='';
-let altaStep=1, altaData={foto:null,documentos:[],empresa:'ROANSA'};
+let altaStep=1, altaData={foto:null,documentos:[]};
 
 // ── UTILS ─────────────────────────────────────────────────────────
 const calcAge=d=>{if(!d)return null;const t=new Date(),b=new Date(d);let a=t.getFullYear()-b.getFullYear();const m=t.getMonth()-b.getMonth();if(m<0||(m===0&&t.getDate()<b.getDate()))a--;return a;};
@@ -265,10 +265,10 @@ function renderList(){
   const filtered=employees.filter(e=>{
     const q=searchQ.toLowerCase();
     return(!q||e.nombre.toLowerCase().includes(q)||e.puesto.toLowerCase().includes(q)||(e.email||'').toLowerCase().includes(q))
-      &&(!filterArea||e.area===filterArea)&&(!filterStatus||e.status===filterStatus)&&(!femp||e.empresa===femp);
+      &&(!filterArea||e.area===filterArea)&&(!filterStatus||e.status===filterStatus);
   });
   let h=`<div class="topbar"><div><h1>Directorio de Empleados</h1><div class="topbar-sub">${employees.length} empleados en total</div></div><button class="btn btn-primary" onclick="showView('alta')">➕ Dar de alta</button></div>`;
-  h+=`<div class="search-bar"><input placeholder="Buscar nombre, puesto, correo…" value="${esc(searchQ)}" oninput="searchQ=this.value;renderList()"><select id="filter-empresa" onchange="renderList()"><option value="">Todas las empresas</option><option value="ROANSA">ROANSA</option><option value="SPG">SPG</option></select><select onchange="filterArea=this.value;renderList()"><option value="">Todas las áreas</option>${AREAS.map(a=>`<option value="${a}"${filterArea===a?' selected':''}>${a}</option>`).join('')}</select><select onchange="filterStatus=this.value;renderList()"><option value="">Todos</option>${['Activo','Inactivo','Baja'].map(s=>`<option value="${s}"${filterStatus===s?' selected':''}>${s}</option>`).join('')}</select></div>`;
+  h+=`<div class="search-bar"><input placeholder="Buscar nombre, puesto, correo…" value="${esc(searchQ)}" oninput="searchQ=this.value;renderList()"><select onchange="filterArea=this.value;renderList()"><option value="">Todas las áreas</option>${AREAS.map(a=>`<option value="${a}"${filterArea===a?' selected':''}>${a}</option>`).join('')}</select><select onchange="filterStatus=this.value;renderList()"><option value="">Todos</option>${['Activo','Inactivo','Baja'].map(s=>`<option value="${s}"${filterStatus===s?' selected':''}>${s}</option>`).join('')}</select></div>`;
   h+=`<div class="count-note">${filtered.length} empleado${filtered.length!==1?'s':''} encontrado${filtered.length!==1?'s':''}</div><div class="emp-list">`;
   if(!filtered.length)h+=`<div class="empty">No se encontraron empleados.</div>`;
   filtered.forEach(e=>{
@@ -299,7 +299,7 @@ function renderDetail(){
       ${contractTemplate?`<button class="btn btn-green btn-sm" onclick="generateContract(${e.id})">📄 Generar contrato</button>`:''}
       <button class="btn btn-danger btn-sm" onclick="deleteEmp(${e.id})">🗑 Eliminar</button>
     </div></div>`;
-  h+=`<div class="hero-card">${av(e.nombre,70,e.foto)}<div style="flex:1"><div class="hero-name">${esc(e.nombre)}</div><div class="hero-sub">${esc(e.puesto)} · ${esc(e.area)}</div><div class="hero-badges">${bdg(e.empresa==='SPG'?'SPG':'ROANSA',e.empresa==='SPG'?'blue':'red')} ${bdg(e.status,e.status==='Activo'?'green':'gray')} ${bdg(e.contrato,'gray')}${anos!==null&&anos>0?' '+bdg(anos+' año'+(anos!==1?'s':'')+' en ROANSA','blue'):''}</div></div></div>`;
+  h+=`<div class="hero-card">${av(e.nombre,70,e.foto)}<div style="flex:1"><div class="hero-name">${esc(e.nombre)}</div><div class="hero-sub">${esc(e.puesto)} · ${esc(e.area)}</div><div class="hero-badges">${bdg(e.status,e.status==='Activo'?'green':'gray')} ${bdg(e.contrato,'gray')}${anos!==null&&anos>0?' '+bdg(anos+' año'+(anos!==1?'s':'')+' en ROANSA','blue'):''}</div></div></div>`;
   h+=alertBanner;
   h+=`<div class="section-grid">
     <div class="section-box"><div class="section-title">Datos personales</div>
@@ -723,7 +723,7 @@ function saveEdit(){
   const docs=[...document.querySelectorAll('#doc-btns .doc-toggle.checked')].map(b=>b.dataset.doc);
   const i=employees.findIndex(e=>e.id===editingId);
   if(i>-1){
-    employees[i]={...employees[i],nombre,empresa:gv('f-empresa')||'ROANSA',puesto:gv('f-puesto'),area:gv('f-area'),
+    employees[i]={...employees[i],nombre,puesto:gv('f-puesto'),area:gv('f-area'),
       telefono:gv('f-tel'),email:gv('f-email'),curp:gv('f-curp'),rfc:gv('f-rfc'),
       nss:gv('f-nss'),domicilio:gv('f-dom'),fechaNacimiento:gv('f-nac'),
       fechaIngreso:gv('f-ing'),status:gv('f-status'),contrato:gv('f-contrato'),
