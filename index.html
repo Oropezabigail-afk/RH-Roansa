@@ -1,39 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<script>
-(function(){
-  if(sessionStorage.getItem('rh_ok')==='1') return;
-  // Not authenticated - hide body immediately and show login when DOM ready
-  document.addEventListener('DOMContentLoaded', function(){
-    var app = document.getElementById('app');
-    if(app) app.style.display = 'none';
-    var modal = document.getElementById('modal');
-    if(modal) modal.style.display = 'none';
-    
-    var d = document.createElement('div');
-    d.id = 'login-screen';
-    d.style.cssText = 'position:fixed;inset:0;background:#111;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Segoe UI,sans-serif';
-    d.innerHTML = '<div style="background:#1C1C1C;border-radius:14px;padding:36px;width:320px;text-align:center"><div style="width:44px;height:44px;background:#C0112B;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;margin:0 auto 14px">R</div><div style="font-weight:900;font-size:17px;color:#fff;margin-bottom:3px">ROANSA</div><div style="font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:22px">RH &middot; Expedientes</div><input id="pi" type="password" placeholder="Contrase&ntilde;a" style="width:100%;padding:11px;border-radius:7px;border:1.5px solid #333;background:#0a0a0a;color:#fff;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center;letter-spacing:2px"><button id="pb" style="width:100%;padding:11px;background:#C0112B;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">Entrar</button><div id="pe" style="color:#ff6b7a;font-size:12px;margin-top:8px;min-height:16px"></div></div>';
-    document.body.appendChild(d);
-    
-    function check(){
-      if(document.getElementById('pi').value === 'Roansa2026'){
-        sessionStorage.setItem('rh_ok','1');
-        document.getElementById('login-screen').remove();
-        if(app) app.style.display = 'flex';
-      } else {
-        document.getElementById('pe').textContent = 'Contrasena incorrecta';
-        document.getElementById('pi').value = '';
-        setTimeout(function(){document.getElementById('pe').textContent='';}, 2500);
-      }
-    }
-    document.getElementById('pb').addEventListener('click', check);
-    document.getElementById('pi').addEventListener('keydown', function(e){ if(e.key==='Enter') check(); });
-    document.getElementById('pi').focus();
-  });
-})();
-</script>
 
 <script>
 (function(){
