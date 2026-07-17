@@ -1008,19 +1008,85 @@ function imprimirCredencial(e){
 }
 
 /* ================= CONTRATO ================= */
+function numeroALetras(n){
+  n = Math.floor(n);
+  if(n === 0) return "CERO";
+  var UNIDADES = ["", "UNO", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"];
+  var DIEZ_A_DIECINUEVE = ["DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISEIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE"];
+  var DECENAS = ["", "", "VEINTE", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"];
+  var VEINTES = ["VEINTE", "VEINTIUNO", "VEINTIDOS", "VEINTITRES", "VEINTICUATRO", "VEINTICINCO", "VEINTISEIS", "VEINTISIETE", "VEINTIOCHO", "VEINTINUEVE"];
+  var CENTENAS = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"];
+  function tresDigitos(num){
+    num = num % 1000;
+    var c = Math.floor(num / 100);
+    var resto = num % 100;
+    var out = "";
+    if(num === 100){ return "CIEN"; }
+    if(c > 0){ out += CENTENAS[c]; }
+    if(resto > 0){
+      if(out) out += " ";
+      if(resto < 10){ out += UNIDADES[resto]; }
+      else if(resto < 20){ out += DIEZ_A_DIECINUEVE[resto - 10]; }
+      else if(resto < 30){ out += VEINTES[resto - 20]; }
+      else{
+        var d = Math.floor(resto / 10);
+        var u = resto % 10;
+        out += DECENAS[d];
+        if(u > 0){ out += " Y " + UNIDADES[u]; }
+      }
+    }
+    return out;
+  }
+  function seccion(num, divisor, singular, plural){
+    var cientos = Math.floor(num / divisor);
+    var resto = num % divisor;
+    var out = "";
+    if(cientos > 0){
+      if(cientos === 1){ out = singular; }
+      else{ out = tresDigitos(cientos) + " " + plural; }
+    }
+    return { texto: out, resto: resto };
+  }
+  var millones = seccion(n, 1000000, "UN MILLON", "MILLONES");
+  var miles = seccion(millones.resto, 1000, "MIL", "MIL");
+  var centenas = tresDigitos(miles.resto);
+  var partes = [];
+  if(millones.texto) partes.push(millones.texto);
+  if(miles.texto) partes.push(miles.texto);
+  if(centenas) partes.push(centenas);
+  return partes.join(" ").replace(/\s+/g, " ").trim();
+}
+function montoALetras(monto){
+  monto = parseFloat(monto) || 0;
+  var entero = Math.floor(monto);
+  var centavos = Math.round((monto - entero) * 100);
+  if(centavos >= 100){ entero += 1; centavos -= 100; }
+  var letras = numeroALetras(entero);
+  if(/UNO$/.test(letras)){ letras = letras.replace(/UNO$/, "UN"); }
+  var centavosStr = (centavos < 10 ? "0" : "") + centavos;
+  return letras + " PESOS " + centavosStr + "/100 M.N.";
+}
 function buildContractVars(e, fechaContrato, tipo){
   var fc = fechaContrato || e.fecha_contrato || new Date().toISOString().slice(0,10);
   var fcDate = new Date(fc + "T00:00:00");
   var idc = e.id_contrato || ((e.empresa === "ROANSA" ? "CTR-ROA-" : "CTR-SPG-") + fcDate.getFullYear() + "-" + String(state.contratoCounter).padStart(4,"0"));
   var emp = EMPRESAS[e.empresa];
+  var terminoPrueba = new Date(fcDate.getTime());
+  if(e.fecha_ingreso){
+    terminoPrueba = new Date(e.fecha_ingreso + "T00:00:00");
+    terminoPrueba.setDate(terminoPrueba.getDate() + 30);
+  }
   return {
     nombre: e.nombre, curp: e.curp, rfc: e.rfc, nss: e.nss, puesto: e.puesto, area: e.area,
     contrato: tipo || "INDETERMINADO",
     fecha_ingreso: fmtDate(e.fecha_ingreso), fecha_contrato: fmtDate(fc), fecha_nacimiento: fmtDate(e.fecha_nacimiento),
+    fecha_termino_prueba: fmtDate(terminoPrueba.toISOString().slice(0,10)),
     edad: calcEdad(e.fecha_nacimiento), nacionalidad: e.nacionalidad, estado_civil: e.estado_civil,
     calle: e.calle, no_exterior: e.no_exterior, colonia: e.colonia, cp: e.cp, estado: e.estado, pais: e.pais,
     salario_mensual: money(e.salario_mensual), salario_diario: money(e.salario_diario),
-    dia: fcDate.getDate(), mes: MESES_ES[fcDate.getMonth()], id_contrato: idc,
+    salario_mensual_letra: montoALetras(e.salario_mensual), salario_diario_letra: montoALetras(e.salario_diario),
+    dia: fcDate.getDate(), mes: MESES_ES[fcDate.getMonth()], mes_num: String(fcDate.getMonth() + 1).padStart(2, "0"),
+    anio: fcDate.getFullYear(), id_contrato: idc,
     empresa_nombre: emp.nombre, empresa_rfc: emp.rfc, empresa_imss: emp.imss, empresa_stps: emp.stps,
     empresa_escritura: emp.escritura, empresa_direccion: DIRECCION_FISCAL, representante: REPRESENTANTE
   };
@@ -1112,7 +1178,7 @@ function renderMachotesView(el){
   html += machoteBoxHTML("SPG", "spg");
   html += '</div>';
   html += '<div class="vars-legend"><strong>Variables disponibles:</strong><br>';
-  var vars = ["nombre","curp","rfc","nss","puesto","area","contrato","fecha_ingreso","fecha_contrato","fecha_nacimiento","edad","nacionalidad","estado_civil","calle","no_exterior","colonia","cp","estado","pais","salario_mensual","salario_diario","dia","mes","id_contrato","empresa_nombre","empresa_rfc","empresa_imss","empresa_stps","empresa_escritura","empresa_direccion","representante"];
+  var vars = ["nombre","curp","rfc","nss","puesto","area","contrato","fecha_ingreso","fecha_contrato","fecha_termino_prueba","fecha_nacimiento","edad","nacionalidad","estado_civil","calle","no_exterior","colonia","cp","estado","pais","salario_mensual","salario_diario","salario_mensual_letra","salario_diario_letra","dia","mes","mes_num","anio","id_contrato","empresa_nombre","empresa_rfc","empresa_imss","empresa_stps","empresa_escritura","empresa_direccion","representante"];
   for(var i=0;i<vars.length;i++){ html += '<code>{{'+vars[i]+'}}</code>'; }
   html += '</div>';
   el.innerHTML = html;
