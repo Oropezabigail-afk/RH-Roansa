@@ -147,6 +147,19 @@
   .note-box { background:#fff8e6; border:1px solid #ffe6a1; border-radius:8px; padding:12px 14px; font-size:12.5px; color:#8a6600; margin-bottom:16px; }
   .empty-msg { text-align:center; color:#999; padding:40px 0; font-size:14px; }
   .back-link { display:inline-block; margin-bottom:16px; color:#c8202f; font-weight:600; font-size:13.5px; text-decoration:none; cursor:pointer; }
+
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:10px; }
+  .cal-dow { text-align:center; font-weight:700; font-size:12px; color:#777; padding:4px 0; }
+  .cal-cell { background:#fff; border-radius:8px; min-height:92px; padding:6px; font-size:11px; box-shadow:0 1px 4px rgba(0,0,0,.05); overflow:hidden; }
+  .cal-empty { background:transparent; box-shadow:none; }
+  .cal-today { border:2px solid #c8202f; }
+  .cal-daynum { font-weight:700; font-size:12.5px; margin-bottom:4px; }
+  .cal-tag { display:block; font-size:9.5px; border-radius:5px; padding:2px 5px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cal-tag-cumple { background:#fdeceb; color:#c8202f; }
+  .cal-tag-aniv { background:#eaf1fb; color:#1f5fa8; }
+  .cal-tag-vac { background:#e4f7e9; color:#2e9e4c; }
+  .cal-legend { display:flex; gap:14px; font-size:12.5px; color:#555; margin-bottom:16px; flex-wrap:wrap; }
+  .cal-nav-btn { min-width:38px; text-align:center; }
 </style>
 </head>
 <body>
@@ -223,12 +236,15 @@ var EJEMPLO_DOCX_BASE64 = "UEsDBBQAAAAIACO671ytUqWRlQEAAMoGAAATAAAAW0NvbnRlbnRfV
 var state = {
   employees: [],
   machotes: { ROANSA:"", SPG:"" },
+  vacaciones: [],
   folioCounter: 1,
   contratoCounter: 1,
   view: "panel",
   viewParam: null,
   altaStep: 1,
-  altaDraft: null
+  altaDraft: null,
+  calYear: null,
+  calMonth: null
 };
 
 /* ================= UTILIDADES ================= */
@@ -311,6 +327,7 @@ function saveState(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       employees: state.employees,
       machotes: state.machotes,
+      vacaciones: state.vacaciones,
       folioCounter: state.folioCounter,
       contratoCounter: state.contratoCounter
     }));
@@ -324,6 +341,7 @@ function loadState(){
       var data = JSON.parse(raw);
       state.employees = data.employees || [];
       state.machotes = data.machotes || { ROANSA:"", SPG:"" };
+      state.vacaciones = data.vacaciones || [];
       state.folioCounter = data.folioCounter || 1;
       state.contratoCounter = data.contratoCounter || 1;
       return;
@@ -331,6 +349,7 @@ function loadState(){
   }
   state.employees = demoEmployees();
   state.machotes = { ROANSA:"", SPG:"" };
+  state.vacaciones = [];
   state.folioCounter = 1;
   state.contratoCounter = 1;
   saveState();
@@ -345,15 +364,15 @@ function demoEmployees(){
     { id:uid(), empresa:"ROANSA", nombre:"Oscar Medina", puesto:"Supervisor", area:"Operaciones", status:"Activo",
       fecha_ingreso:"2018-06-01", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
       calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México", salario_mensual:"", salario_diario:"",
-      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"" },
+      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"", sspc:{ alta:"", documentos:[] } },
     { id:uid(), empresa:"ROANSA", nombre:"Enrique Huitron", puesto:"Supervisor", area:"Operaciones", status:"Activo",
       fecha_ingreso:"2019-02-15", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
       calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México", salario_mensual:"", salario_diario:"",
-      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"" },
+      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"", sspc:{ alta:"", documentos:[] } },
     { id:uid(), empresa:"SPG", nombre:"Julieta Rodriguez", puesto:"Supervisora", area:"Monitoreo", status:"Activo",
       fecha_ingreso:"2020-09-01", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
       calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México", salario_mensual:"", salario_diario:"",
-      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"" }
+      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"", sspc:{ alta:"", documentos:[] } }
   ];
 }
 function findEmployee(id){
@@ -392,6 +411,7 @@ function renderSidebar(){
     { key:"panel", label:"Panel" },
     { key:"empleados", label:"Empleados" },
     { key:"alta", label:"Dar de alta" },
+    { key:"calendario", label:"Calendario" },
     { key:"machotes", label:"Machotes" }
   ];
   var html = '<div class="sidebar-logo-box">' + logoFullHTML(42) + '</div>';
@@ -424,6 +444,7 @@ function renderMain(){
   if(state.view === "empleados") return renderEmpleadosView(el);
   if(state.view === "ficha") return renderFichaView(el, state.viewParam);
   if(state.view === "alta") return renderAltaView(el);
+  if(state.view === "calendario") return renderCalendarioView(el);
   if(state.view === "machotes") return renderMachotesView(el);
   if(state.view === "credencial") return renderCredencialView(el, state.viewParam);
   if(state.view === "contrato") return renderContratoView(el, state.viewParam);
@@ -612,11 +633,18 @@ function renderFichaView(el, id){
   html += dlItem("Folio de credencial", e.folio || "Sin generar");
   html += dlItem("Tipo de contrato", e.tipo_contrato === "PRUEBA" ? "A prueba" : (e.tipo_contrato === "INDETERMINADO" ? "Indeterminado" : "Sin generar"));
   html += dlItem("No. de contrato", e.id_contrato || "Sin generar");
+  var aniosAntig = antiguedadAnios(e.fecha_ingreso);
+  html += dlItem("Antigüedad", e.fecha_ingreso ? (aniosAntig + " año(s)") : "—");
+  html += dlItem("Vacaciones vigentes (Ley)", e.fecha_ingreso ? (diasVacacionesLey(aniosAntig) + " días") : "—");
   html += '</div>';
 
   html += '<h3 style="margin-bottom:12px;">Documentos del expediente</h3>';
   html += '<div class="note-box">Sube el archivo o marca como recibido. Los cambios se guardan de inmediato en el expediente.</div>';
   html += '<div id="fichaDocsContainer">' + fichaDocsHTML(e) + '</div>';
+
+  if(e.empresa === "ROANSA"){
+    html += fichaSSPCHTML(e);
+  }
 
   html += '<div style="display:flex;gap:12px;flex-wrap:wrap;">';
   html += '<button class="btn" data-action="credencial">Generar / Ver credencial</button>';
@@ -633,6 +661,7 @@ function renderFichaView(el, id){
   });
   el.querySelector('[data-action="contrato"]').addEventListener("click", function(){ switchView("contrato", e.id); });
   wireFichaDocs(e, el);
+  if(e.empresa === "ROANSA"){ wireFichaSSPC(e, el); }
 }
 function fichaDocsHTML(e){
   var html = "";
@@ -700,7 +729,7 @@ function newAltaDraft(){
     empresa:"", nombre:"", puesto:"", area:"", status:"Activo",
     fecha_ingreso:"", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
     calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México",
-    salario_mensual:"", salario_diario:"", foto:"", documentos:blankDocs()
+    salario_mensual:"", salario_diario:"", foto:"", documentos:blankDocs(), sspc:{ alta:"", documentos:[] }
   };
 }
 function captureStep1(){
@@ -1146,6 +1175,263 @@ function openPrintWindow(title, bodyHtml, extraCss){
   doc.close();
   w.focus();
   setTimeout(function(){ w.print(); }, 350);
+}
+
+/* ================= VACACIONES POR LEY (Art. 76 LFT, reforma vigente 2023) ================= */
+function antiguedadAnios(fechaIngreso){
+  if(!fechaIngreso) return 0;
+  var ing = new Date(fechaIngreso + "T00:00:00");
+  if(isNaN(ing.getTime())) return 0;
+  var hoy = new Date();
+  var anios = hoy.getFullYear() - ing.getFullYear();
+  var m = hoy.getMonth() - ing.getMonth();
+  if(m < 0 || (m === 0 && hoy.getDate() < ing.getDate())) anios--;
+  return Math.max(0, anios);
+}
+function diasVacacionesLey(anios){
+  if(anios < 1) return 0;
+  if(anios === 1) return 12;
+  if(anios === 2) return 14;
+  if(anios === 3) return 16;
+  if(anios === 4) return 18;
+  if(anios === 5) return 20;
+  var bloque = Math.floor((anios - 6) / 5);
+  return 22 + bloque * 2;
+}
+
+/* ================= ALTA SSPC (solo ROANSA) ================= */
+function fichaSSPCHTML(e){
+  if(!e.sspc) e.sspc = { alta:"", documentos:[] };
+  var html = '<h3 style="margin-bottom:12px;">Alta SSPC</h3>';
+  html += '<div class="form-field" style="max-width:260px;margin-bottom:14px;"><label>&#191;Se dio de alta ante la SSPC?</label>';
+  html += '<select id="sspcAltaSelect"><option value="">Seleccionar...</option><option value="SI" '+(e.sspc.alta==="SI"?"selected":"")+'>S&iacute;</option><option value="NO" '+(e.sspc.alta==="NO"?"selected":"")+'>No</option></select></div>';
+  html += '<div id="sspcDocsWrap">' + (e.sspc.alta === "SI" ? sspcBlockHTML(e) : "") + '</div>';
+  return html;
+}
+function sspcBlockHTML(e){
+  var html = '<div class="note-box">Agrega y sube los documentos del expediente de alta SSPC.</div>';
+  html += '<div id="sspcDocsContainer">' + sspcDocsHTML(e) + '</div>';
+  html += '<button class="btn small secondary" data-action="sspc-agregar-doc" style="margin-top:8px;">+ Agregar documento</button>';
+  return html;
+}
+function sspcDocsHTML(e){
+  var html = "";
+  for(var i=0;i<e.sspc.documentos.length;i++){
+    var doc = e.sspc.documentos[i];
+    html += '<div class="doc-row">';
+    html += '<div class="doc-name">'+esc(doc.nombre)+'</div>';
+    html += '<div class="doc-controls">';
+    html += '<input type="file" data-sspc-file="'+i+'">';
+    html += '<label style="font-size:12.5px;"><input type="checkbox" data-sspc-check="'+i+'" '+(doc.recibido?"checked":"")+'> Recibido</label>';
+    html += '<span class="doc-status-tag '+(doc.recibido?"tag-recibido":"tag-pendiente")+'">'+(doc.recibido?"Recibido":"Pendiente")+(doc.nombreArchivo?(" &middot; "+esc(doc.nombreArchivo)):"")+'</span>';
+    html += '<button class="btn small secondary" data-sspc-del="'+i+'">Quitar</button>';
+    html += '</div></div>';
+  }
+  if(e.sspc.documentos.length === 0){ html += '<div class="empty-msg">Aún no hay documentos agregados.</div>'; }
+  return html;
+}
+function wireFichaSSPC(e, el){
+  var sel = byId("sspcAltaSelect");
+  if(!sel) return;
+  sel.addEventListener("change", function(){
+    e.sspc.alta = this.value;
+    saveState();
+    byId("sspcDocsWrap").innerHTML = e.sspc.alta === "SI" ? sspcBlockHTML(e) : "";
+    wireSSPCDocs(e, el);
+    wireSSPCAddButton(e, el);
+  });
+  wireSSPCDocs(e, el);
+  wireSSPCAddButton(e, el);
+}
+function wireSSPCAddButton(e, el){
+  var addBtn = el.querySelector('[data-action="sspc-agregar-doc"]');
+  if(addBtn){
+    addBtn.addEventListener("click", function(){
+      var nombre = window.prompt("Nombre del documento (por ejemplo: Oficio de alta, Comprobante de pago...)");
+      if(!nombre) return;
+      e.sspc.documentos.push({ nombre: nombre, recibido:false, archivo:null, nombreArchivo:"" });
+      saveState();
+      byId("sspcDocsContainer").innerHTML = sspcDocsHTML(e);
+      wireSSPCDocs(e, el);
+    });
+  }
+}
+function wireSSPCDocs(e, el){
+  var cont = byId("sspcDocsContainer");
+  if(!cont) return;
+  var fileInputs = cont.querySelectorAll("[data-sspc-file]");
+  for(var i=0;i<fileInputs.length;i++){
+    fileInputs[i].addEventListener("change", function(ev){
+      var idx = parseInt(this.getAttribute("data-sspc-file"), 10);
+      var file = ev.target.files[0];
+      if(!file) return;
+      var reader = new FileReader();
+      reader.onload = function(evt){
+        e.sspc.documentos[idx].recibido = true;
+        e.sspc.documentos[idx].archivo = evt.target.result;
+        e.sspc.documentos[idx].nombreArchivo = file.name;
+        downloadDataUrl(file.name, evt.target.result);
+        saveState();
+        cont.innerHTML = sspcDocsHTML(e);
+        wireSSPCDocs(e, el);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  var checks = cont.querySelectorAll("[data-sspc-check]");
+  for(i=0;i<checks.length;i++){
+    checks[i].addEventListener("change", function(){
+      var idx = parseInt(this.getAttribute("data-sspc-check"), 10);
+      e.sspc.documentos[idx].recibido = this.checked;
+      if(!this.checked){ e.sspc.documentos[idx].archivo = null; e.sspc.documentos[idx].nombreArchivo = ""; }
+      saveState();
+      cont.innerHTML = sspcDocsHTML(e);
+      wireSSPCDocs(e, el);
+    });
+  }
+  var dels = cont.querySelectorAll("[data-sspc-del]");
+  for(i=0;i<dels.length;i++){
+    dels[i].addEventListener("click", function(){
+      var idx = parseInt(this.getAttribute("data-sspc-del"), 10);
+      e.sspc.documentos.splice(idx, 1);
+      saveState();
+      cont.innerHTML = sspcDocsHTML(e);
+      wireSSPCDocs(e, el);
+    });
+  }
+}
+
+/* ================= CALENDARIO ================= */
+function sameYMD(dateObj, y, m, d){
+  return dateObj.getFullYear() === y && dateObj.getMonth() === m && dateObj.getDate() === d;
+}
+function eventosDelDia(y, m, d){
+  var cumple = [], aniv = [], vac = [];
+  var i, e;
+  for(i=0;i<state.employees.length;i++){
+    e = state.employees[i];
+    if(e.fecha_nacimiento){
+      var nac = new Date(e.fecha_nacimiento + "T00:00:00");
+      if(!isNaN(nac.getTime()) && nac.getMonth() === m && nac.getDate() === d) cumple.push(e.nombre);
+    }
+    if(e.fecha_ingreso){
+      var ing = new Date(e.fecha_ingreso + "T00:00:00");
+      if(!isNaN(ing.getTime()) && ing.getMonth() === m && ing.getDate() === d) aniv.push(e.nombre);
+    }
+  }
+  var cur = new Date(y, m, d); cur.setHours(0,0,0,0);
+  for(i=0;i<state.vacaciones.length;i++){
+    var v = state.vacaciones[i];
+    var ini = new Date(v.inicio + "T00:00:00");
+    var fin = new Date(v.fin + "T00:00:00");
+    if(cur.getTime() >= ini.getTime() && cur.getTime() <= fin.getTime()){
+      var emp = findEmployee(v.empleadoId);
+      vac.push(emp ? emp.nombre : "Empleado");
+    }
+  }
+  return { cumple:cumple, aniv:aniv, vac:vac };
+}
+function renderCalendarioView(el){
+  if(state.calYear === null || state.calYear === undefined){
+    var t = new Date();
+    state.calYear = t.getFullYear();
+    state.calMonth = t.getMonth();
+  }
+  var y = state.calYear, m = state.calMonth;
+  var first = new Date(y, m, 1);
+  var startWeekday = first.getDay();
+  var daysInMonth = new Date(y, m + 1, 0).getDate();
+  var diasSemana = ["Dom","Lun","Mar","Mi&eacute;","Jue","Vie","S&aacute;b"];
+
+  var html = '<h1 class="view-title">Calendario</h1>';
+  html += '<p class="view-sub">Cumplea&ntilde;os y aniversarios autom&aacute;ticos &middot; vacaciones marcadas manualmente</p>';
+
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">';
+  html += '<button class="btn secondary small cal-nav-btn" data-cal-nav="prev">&larr;</button>';
+  html += '<div style="font-weight:700;font-size:16px;min-width:170px;text-align:center;">'+(MESES_ES[m].charAt(0).toUpperCase()+MESES_ES[m].slice(1))+' '+y+'</div>';
+  html += '<button class="btn secondary small cal-nav-btn" data-cal-nav="next">&rarr;</button>';
+  html += '<button class="btn secondary small" data-cal-nav="hoy">Hoy</button>';
+  html += '</div>';
+
+  html += '<div class="cal-legend">';
+  html += '<span class="cal-tag cal-tag-cumple">&#127874; Cumplea&ntilde;os</span>';
+  html += '<span class="cal-tag cal-tag-aniv">&#127881; Aniversario</span>';
+  html += '<span class="cal-tag cal-tag-vac">&#127958; Vacaciones</span>';
+  html += '</div>';
+
+  html += '<div class="cal-grid">';
+  for(var i=0;i<7;i++){ html += '<div class="cal-dow">'+diasSemana[i]+'</div>'; }
+  for(i=0;i<startWeekday;i++){ html += '<div class="cal-cell cal-empty"></div>'; }
+  for(var d=1; d<=daysInMonth; d++){
+    var evs = eventosDelDia(y, m, d);
+    var isToday = sameYMD(new Date(), y, m, d);
+    html += '<div class="cal-cell'+(isToday?" cal-today":"")+'">';
+    html += '<div class="cal-daynum">'+d+'</div>';
+    for(var j=0;j<evs.cumple.length;j++){ html += '<div class="cal-tag cal-tag-cumple" title="Cumplea&ntilde;os: '+esc(evs.cumple[j])+'">&#127874; '+esc(evs.cumple[j])+'</div>'; }
+    for(j=0;j<evs.aniv.length;j++){ html += '<div class="cal-tag cal-tag-aniv" title="Aniversario: '+esc(evs.aniv[j])+'">&#127881; '+esc(evs.aniv[j])+'</div>'; }
+    for(j=0;j<evs.vac.length;j++){ html += '<div class="cal-tag cal-tag-vac" title="Vacaciones: '+esc(evs.vac[j])+'">&#127958; '+esc(evs.vac[j])+'</div>'; }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="form-box" style="margin-top:24px;"><h3>Registrar periodo de vacaciones</h3>';
+  html += '<div class="form-grid">';
+  html += '<div class="form-field"><label>Empleado</label><select id="vacEmpleado">';
+  for(i=0;i<state.employees.length;i++){ html += '<option value="'+state.employees[i].id+'">'+esc(state.employees[i].nombre)+'</option>'; }
+  html += '</select></div>';
+  html += '<div class="form-field"><label>Fecha inicio</label><input type="date" id="vacInicio"></div>';
+  html += '<div class="form-field"><label>Fecha fin</label><input type="date" id="vacFin"></div>';
+  html += '</div>';
+  html += '<button class="btn" data-action="agregar-vacacion" style="margin-top:10px;">Agregar vacaciones</button>';
+  html += '</div>';
+
+  html += '<div class="panel-box" style="margin-top:20px;"><h3>Periodos registrados</h3><div id="vacacionesLista"></div></div>';
+
+  el.innerHTML = html;
+
+  var navBtns = el.querySelectorAll("[data-cal-nav]");
+  for(i=0;i<navBtns.length;i++){
+    navBtns[i].addEventListener("click", function(){
+      var dir = this.getAttribute("data-cal-nav");
+      if(dir === "prev"){ state.calMonth--; if(state.calMonth < 0){ state.calMonth = 11; state.calYear--; } }
+      else if(dir === "next"){ state.calMonth++; if(state.calMonth > 11){ state.calMonth = 0; state.calYear++; } }
+      else { var t2 = new Date(); state.calYear = t2.getFullYear(); state.calMonth = t2.getMonth(); }
+      renderCalendarioView(el);
+    });
+  }
+  el.querySelector('[data-action="agregar-vacacion"]').addEventListener("click", function(){
+    var empId = val("vacEmpleado");
+    var ini = val("vacInicio");
+    var fin = val("vacFin");
+    if(!empId || !ini || !fin){ alert("Selecciona empleado y ambas fechas."); return; }
+    if(fin < ini){ alert("La fecha fin debe ser posterior o igual a la fecha inicio."); return; }
+    state.vacaciones.push({ id: uid(), empleadoId: empId, inicio: ini, fin: fin });
+    saveState();
+    renderCalendarioView(el);
+  });
+  renderVacacionesLista(el);
+}
+function renderVacacionesLista(el){
+  var cont = byId("vacacionesLista");
+  if(!cont) return;
+  if(state.vacaciones.length === 0){ cont.innerHTML = '<div class="empty-msg">Sin periodos registrados.</div>'; return; }
+  var lista = state.vacaciones.slice().sort(function(a,b){ return a.inicio < b.inicio ? -1 : (a.inicio > b.inicio ? 1 : 0); });
+  var html = "";
+  for(var i=0;i<lista.length;i++){
+    var v = lista[i];
+    var emp = findEmployee(v.empleadoId);
+    html += '<div class="list-row"><span>'+esc(emp?emp.nombre:"?")+' &middot; '+fmtDate(v.inicio)+' a '+fmtDate(v.fin)+'</span><button class="btn small secondary" data-del-vac="'+v.id+'">Eliminar</button></div>';
+  }
+  cont.innerHTML = html;
+  var delBtns = cont.querySelectorAll("[data-del-vac]");
+  for(i=0;i<delBtns.length;i++){
+    delBtns[i].addEventListener("click", function(){
+      var id = this.getAttribute("data-del-vac");
+      state.vacaciones = state.vacaciones.filter(function(item){ return item.id !== id; });
+      saveState();
+      renderCalendarioView(el);
+    });
+  }
 }
 
 /* ================= INICIO ================= */
