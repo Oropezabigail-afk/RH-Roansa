@@ -239,6 +239,9 @@ var state = {
   vacaciones: [],
   folioCounter: 1,
   contratoCounter: 1,
+  machoteVale: "",
+  uniformeInventario: [],
+  valeCounter: 1,
   view: "panel",
   viewParam: null,
   altaStep: 1,
@@ -329,7 +332,10 @@ function saveState(){
       machotes: state.machotes,
       vacaciones: state.vacaciones,
       folioCounter: state.folioCounter,
-      contratoCounter: state.contratoCounter
+      contratoCounter: state.contratoCounter,
+      machoteVale: state.machoteVale,
+      uniformeInventario: state.uniformeInventario,
+      valeCounter: state.valeCounter
     }));
   }catch(e){ console.warn("No se pudo guardar en localStorage", e); }
 }
@@ -344,6 +350,10 @@ function loadState(){
       state.vacaciones = data.vacaciones || [];
       state.folioCounter = data.folioCounter || 1;
       state.contratoCounter = data.contratoCounter || 1;
+      state.machoteVale = data.machoteVale || "";
+      state.uniformeInventario = data.uniformeInventario || [];
+      state.valeCounter = data.valeCounter || 1;
+      for(var i=0;i<state.employees.length;i++){ if(!state.employees[i].vales) state.employees[i].vales = []; }
       return;
     }catch(e){ console.warn("Error leyendo datos guardados", e); }
   }
@@ -352,7 +362,49 @@ function loadState(){
   state.vacaciones = [];
   state.folioCounter = 1;
   state.contratoCounter = 1;
+  state.machoteVale = "";
+  state.uniformeInventario = [];
+  state.valeCounter = 1;
   saveState();
+}
+function exportarRespaldo(){
+  var data = {
+    _tipo: "respaldo_rh_roansa_spg", _version: 1, _fecha: new Date().toISOString(),
+    employees: state.employees,
+    machotes: state.machotes,
+    vacaciones: state.vacaciones,
+    folioCounter: state.folioCounter,
+    contratoCounter: state.contratoCounter,
+    machoteVale: state.machoteVale,
+    uniformeInventario: state.uniformeInventario,
+    valeCounter: state.valeCounter
+  };
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  var fecha = new Date().toISOString().slice(0,10);
+  downloadBlob(blob, "Respaldo_RH_ROANSA_" + fecha + ".json");
+}
+function importarRespaldo(file, cb){
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      var data = JSON.parse(ev.target.result);
+      if(!data || !Array.isArray(data.employees)){ throw new Error("El archivo no parece un respaldo válido."); }
+      state.employees = data.employees || [];
+      for(var i=0;i<state.employees.length;i++){ if(!state.employees[i].vales) state.employees[i].vales = []; }
+      state.machotes = data.machotes || { ROANSA:"", SPG:"" };
+      state.vacaciones = data.vacaciones || [];
+      state.folioCounter = data.folioCounter || 1;
+      state.contratoCounter = data.contratoCounter || 1;
+      state.machoteVale = data.machoteVale || "";
+      state.uniformeInventario = data.uniformeInventario || [];
+      state.valeCounter = data.valeCounter || 1;
+      saveState();
+      if(cb) cb(true, null);
+    }catch(err){
+      if(cb) cb(false, err.message);
+    }
+  };
+  reader.readAsText(file);
 }
 function blankDocs(){
   var d = {};
@@ -364,15 +416,15 @@ function demoEmployees(){
     { id:uid(), empresa:"ROANSA", nombre:"Oscar Medina", puesto:"Supervisor", area:"Operaciones", status:"Activo",
       fecha_ingreso:"2018-06-01", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
       calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México", salario_mensual:"", salario_diario:"",
-      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"", sspc:{ alta:"", documentos:[] } },
+      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"", sspc:{ alta:"", documentos:[] }, vales:[] },
     { id:uid(), empresa:"ROANSA", nombre:"Enrique Huitron", puesto:"Supervisor", area:"Operaciones", status:"Activo",
       fecha_ingreso:"2019-02-15", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
       calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México", salario_mensual:"", salario_diario:"",
-      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"", sspc:{ alta:"", documentos:[] } },
+      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"", sspc:{ alta:"", documentos:[] }, vales:[] },
     { id:uid(), empresa:"SPG", nombre:"Julieta Rodriguez", puesto:"Supervisora", area:"Monitoreo", status:"Activo",
       fecha_ingreso:"2020-09-01", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
       calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México", salario_mensual:"", salario_diario:"",
-      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"", sspc:{ alta:"", documentos:[] } }
+      foto:"", documentos:blankDocs(), folio:"", fecha_contrato:"", contratoTexto:"", id_contrato:"", sspc:{ alta:"", documentos:[] }, vales:[] }
   ];
 }
 function findEmployee(id){
@@ -412,13 +464,14 @@ function renderSidebar(){
     { key:"empleados", label:"Empleados" },
     { key:"alta", label:"Dar de alta" },
     { key:"calendario", label:"Calendario" },
-    { key:"machotes", label:"Machotes" }
+    { key:"machotes", label:"Machotes" },
+    { key:"uniformes", label:"Uniformes" }
   ];
   var html = '<div class="sidebar-logo-box">' + logoFullHTML(42) + '</div>';
   html += '<nav class="sidebar-nav">';
   for(var i=0;i<items.length;i++){
     var it = items[i];
-    var activeClass = (state.view === it.key || (it.key==="empleados" && state.view==="ficha") || (it.key==="alta" && (state.view==="credencial"||state.view==="contrato"))) ? " active" : "";
+    var activeClass = (state.view === it.key || (it.key==="empleados" && state.view==="ficha") || (it.key==="alta" && (state.view==="credencial"||state.view==="contrato")) || (it.key==="uniformes" && state.view==="vale")) ? " active" : "";
     html += '<button class="'+ (activeClass ? "active" : "") +'" data-nav="'+it.key+'">' + it.label + '</button>';
   }
   html += '</nav>';
@@ -448,6 +501,8 @@ function renderMain(){
   if(state.view === "machotes") return renderMachotesView(el);
   if(state.view === "credencial") return renderCredencialView(el, state.viewParam);
   if(state.view === "contrato") return renderContratoView(el, state.viewParam);
+  if(state.view === "uniformes") return renderUniformesView(el);
+  if(state.view === "vale") return renderValeView(el, state.viewParam);
   el.innerHTML = '<div class="empty-msg">Vista no encontrada.</div>';
 }
 
@@ -524,11 +579,41 @@ function renderPanelView(el){
   }
   html += '</div>';
 
+  html += '<div class="panel-box" style="margin-top:20px;"><h3>Respaldo de datos</h3>';
+  html += '<div class="note-box">Descarga un archivo con toda la información del sistema (empleados, machotes, inventario, calendario) como respaldo propio. Puedes usarlo después para restaurar todo si hace falta.</div>';
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">';
+  html += '<button class="btn secondary" data-action="exportar-respaldo">Exportar respaldo</button>';
+  html += '<label class="btn secondary" style="margin:0;">Importar respaldo<input type="file" id="importarRespaldoFile" accept=".json" style="display:none;"></label>';
+  html += '</div>';
+  html += '<div id="respaldoStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>';
+  html += '</div>';
+
   el.innerHTML = html;
   var rows = el.querySelectorAll("[data-goto-ficha]");
   for(i=0;i<rows.length;i++){
     rows[i].addEventListener("click", function(){ switchView("ficha", this.getAttribute("data-goto-ficha")); });
   }
+  el.querySelector('[data-action="exportar-respaldo"]').addEventListener("click", function(){
+    exportarRespaldo();
+    byId("respaldoStatus").style.color = "#2e9e4c";
+    byId("respaldoStatus").textContent = "Respaldo descargado.";
+  });
+  byId("importarRespaldoFile").addEventListener("change", function(ev){
+    var file = ev.target.files[0];
+    if(!file) return;
+    if(!window.confirm("Esto reemplazará todos los datos actuales del sistema con los del respaldo. ¿Deseas continuar?")) return;
+    importarRespaldo(file, function(ok, err){
+      var st = byId("respaldoStatus");
+      if(ok){
+        st.style.color = "#2e9e4c";
+        st.textContent = "Respaldo importado correctamente.";
+        renderPanelView(el);
+      } else {
+        st.style.color = "#c8202f";
+        st.textContent = "No se pudo importar el respaldo: " + (err || "archivo inválido.");
+      }
+    });
+  });
 }
 
 /* ================= EMPLEADOS ================= */
@@ -604,6 +689,7 @@ function renderEmpGrid(){
 function renderFichaView(el, id){
   var e = findEmployee(id);
   if(!e){ el.innerHTML = '<div class="empty-msg">Empleado no encontrado.</div>'; return; }
+  if(!e.vales) e.vales = [];
   var html = '';
   html += '<a class="back-link" data-nav="empleados">&larr; Volver a Empleados</a>';
   html += '<div class="ficha-wrap">';
@@ -646,9 +732,13 @@ function renderFichaView(el, id){
     html += fichaSSPCHTML(e);
   }
 
-  html += '<div style="display:flex;gap:12px;flex-wrap:wrap;">';
+  html += '<h3 style="margin-top:22px;margin-bottom:12px;">Vales de uniforme</h3>';
+  html += '<div id="fichaValesContainer">' + fichaValesListaHTML(e) + '</div>';
+
+  html += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">';
   html += '<button class="btn" data-action="credencial">Generar / Ver credencial</button>';
   html += '<button class="btn blue" data-action="contrato">Generar / Ver contrato</button>';
+  html += '<button class="btn secondary" data-action="vale">Vale de uniforme</button>';
   html += '</div>';
 
   html += '</div>';
@@ -660,8 +750,10 @@ function renderFichaView(el, id){
     switchView("credencial", e.id);
   });
   el.querySelector('[data-action="contrato"]').addEventListener("click", function(){ switchView("contrato", e.id); });
+  el.querySelector('[data-action="vale"]').addEventListener("click", function(){ switchView("vale", e.id); });
   wireFichaDocs(e, el);
   if(e.empresa === "ROANSA"){ wireFichaSSPC(e, el); }
+  wireValesLista(el, e);
 }
 function fichaDocsHTML(e){
   var html = "";
@@ -729,7 +821,7 @@ function newAltaDraft(){
     empresa:"", nombre:"", puesto:"", area:"", status:"Activo",
     fecha_ingreso:"", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
     calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México",
-    salario_mensual:"", salario_diario:"", foto:"", documentos:blankDocs(), sspc:{ alta:"", documentos:[] }
+    salario_mensual:"", salario_diario:"", foto:"", documentos:blankDocs(), sspc:{ alta:"", documentos:[] }, vales:[]
   };
 }
 function captureStep1(){
@@ -1226,6 +1318,429 @@ function wireMachoteBox(empresa){
   if(descargarBtn){
     descargarBtn.addEventListener("click", function(){
       downloadBlob(base64ToBlob(state.machotes[empresa]), "Machote_" + empresa + ".docx");
+    });
+  }
+}
+
+/* ================= INVENTARIO DE UNIFORMES ================= */
+var CAT_UNIFORME = [
+  { slug:"pantalon_negro", nombre:"PANTALÓN COMANDO NEGRO", tallaFija:null },
+  { slug:"pantalon_gris", nombre:"PANTALÓN COMANDO GRIS C/SINTILLO", tallaFija:null },
+  { slug:"playera_polo_gris", nombre:"PLAYERA TIPO POLO GRIS", tallaFija:null },
+  { slug:"playera_ml_roja", nombre:"PLAYERA MANGA LARGA COLOR ROJO CON LOGOS", tallaFija:null },
+  { slug:"camisola_blanca", nombre:"CAMISOLA BLANCA", tallaFija:null },
+  { slug:"chamarra_rompevientos", nombre:"CHAMARRA ROMPEVIENTOS NEGRA", tallaFija:null },
+  { slug:"chamarra_desmontable", nombre:"CHAMARRA DESMONTABLE NEGRA", tallaFija:null },
+  { slug:"chaleco_gris", nombre:"CHALECO NEGRO CON GRIS", tallaFija:"ÚNICA" },
+  { slug:"chaleco_tactico", nombre:"CHALECO NEGRO TÁCTICO", tallaFija:"ÚNICA" },
+  { slug:"gorra_negra", nombre:"GORRA NEGRA", tallaFija:"ÚNICA" },
+  { slug:"gorra_roja", nombre:"GORRA ROJA CON LOGO", tallaFija:null },
+  { slug:"corbata", nombre:"CORBATA NEGRA", tallaFija:"ÚNICA" },
+  { slug:"bota_tactica", nombre:"BOTA TÁCTICA NEGRA", tallaFija:null }
+];
+var CAT_COMPLEMENTOS = [
+  { slug:"fornitura", nombre:"FORNITURA" },
+  { slug:"pr24", nombre:"PR-24" },
+  { slug:"gas_pimienta", nombre:"GAS PIMIENTA" },
+  { slug:"manga_impermeable", nombre:"MANGA IMPERMEABLE" },
+  { slug:"botas_impermeables", nombre:"BOTAS IMPERMEABLES" },
+  { slug:"lampara_mano", nombre:"LÁMPARA DE MANO" },
+  { slug:"parrilla_electrica", nombre:"PARRILLA ELÉCTRICA" },
+  { slug:"horno_microondas", nombre:"HORNO DE MICROONDAS" }
+];
+function catalogoDe(categoria){ return categoria === "complemento" ? CAT_COMPLEMENTOS : CAT_UNIFORME; }
+function catalogoItem(categoria, slug){
+  var cat = catalogoDe(categoria);
+  for(var i=0;i<cat.length;i++){ if(cat[i].slug === slug) return cat[i]; }
+  return null;
+}
+function inventarioDisponible(categoria, tipo, talla){
+  var total = 0;
+  for(var i=0;i<state.uniformeInventario.length;i++){
+    var it = state.uniformeInventario[i];
+    if(it.categoria === categoria && it.tipo === tipo && (categoria === "complemento" || it.talla === talla)){
+      total += Number(it.cantidad) || 0;
+    }
+  }
+  return total;
+}
+function descontarInventario(categoria, tipo, talla, cantidad){
+  var restante = Number(cantidad) || 0;
+  for(var i=0;i<state.uniformeInventario.length && restante > 0;i++){
+    var it = state.uniformeInventario[i];
+    if(it.categoria === categoria && it.tipo === tipo && (categoria === "complemento" || it.talla === talla)){
+      var uso = Math.min(Number(it.cantidad) || 0, restante);
+      it.cantidad = (Number(it.cantidad) || 0) - uso;
+      restante -= uso;
+    }
+  }
+}
+function renderUniformesView(el){
+  var html = '<h1 class="view-title">Inventario de uniformes</h1>';
+  html += '<p class="view-sub">Registra las prendas disponibles y el machote del vale de entrega.</p>';
+
+  html += '<div class="form-box" style="margin-bottom:22px;"><h3>Agregar prenda al inventario</h3>';
+  html += '<div class="form-grid">';
+  html += '<div class="form-field"><label>Categoría</label><select id="invCategoria">';
+  html += '<option value="uniforme">Uniforme</option><option value="complemento">Complemento / equipo</option>';
+  html += '</select></div>';
+  html += '<div class="form-field"><label>Prenda / artículo</label><select id="invTipo"></select></div>';
+  html += '<div class="form-field"><label>Talla</label><input type="text" id="invTalla" placeholder="Ej. CH, M, G, XL"></div>';
+  html += '<div class="form-field"><label>Cantidad disponible</label><input type="number" id="invCantidad" min="0" value="1"></div>';
+  html += '</div>';
+  html += '<button class="btn" data-action="inv-agregar" style="margin-top:10px;">Agregar al inventario</button>';
+  html += '</div>';
+
+  html += '<div class="panel-box"><h3>Inventario actual</h3><div id="invLista">' + inventarioTablaHTML() + '</div></div>';
+
+  html += '<div class="machote-box" style="background:#fff;border-top:5px solid #333;margin-top:22px;"><h3>Machote del vale de uniforme (Word)</h3>';
+  html += '<div class="machote-status">' + (state.machoteVale ? "Machote cargado (.docx) listo para usar." : "Aún no hay un machote cargado.") + '</div>';
+  html += '<input type="file" id="machoteValeFile" accept=".docx">';
+  if(state.machoteVale){ html += '<div style="margin-top:10px;"><button class="btn small secondary" data-action="descargar-machote-vale">Descargar machote actual</button></div>'; }
+  html += '</div>';
+
+  el.innerHTML = html;
+  wireUniformesView(el);
+}
+function inventarioTablaHTML(){
+  if(state.uniformeInventario.length === 0){ return '<div class="empty-msg">Sin prendas registradas todavía.</div>'; }
+  var lista = state.uniformeInventario.slice().sort(function(a,b){
+    var na = catalogoItem(a.categoria, a.tipo), nb = catalogoItem(b.categoria, b.tipo);
+    var sa = na ? na.nombre : a.tipo, sb = nb ? nb.nombre : b.tipo;
+    return sa < sb ? -1 : (sa > sb ? 1 : 0);
+  });
+  var html = "";
+  for(var i=0;i<lista.length;i++){
+    var it = lista[i];
+    var cat = catalogoItem(it.categoria, it.tipo);
+    var nombre = cat ? cat.nombre : it.tipo;
+    html += '<div class="doc-row"><div class="doc-name">' + esc(nombre) + (it.categoria === "complemento" ? "" : (" &middot; Talla " + esc(it.talla || "—"))) + '</div>';
+    html += '<div class="doc-controls">';
+    html += '<input type="number" min="0" style="width:80px;" value="' + esc(it.cantidad) + '" data-inv-cant="' + it.id + '">';
+    html += '<button class="btn small secondary" data-inv-del="' + it.id + '">Eliminar</button>';
+    html += '</div></div>';
+  }
+  return html;
+}
+function poblarInvTipoSelect(){
+  var categoria = val("invCategoria");
+  var cat = catalogoDe(categoria);
+  var sel = byId("invTipo");
+  var html = "";
+  for(var i=0;i<cat.length;i++){ html += '<option value="' + cat[i].slug + '">' + esc(cat[i].nombre) + '</option>'; }
+  sel.innerHTML = html;
+  actualizarInvTallaUI();
+}
+function actualizarInvTallaUI(){
+  var categoria = val("invCategoria");
+  var slug = val("invTipo");
+  var tallaInput = byId("invTalla");
+  if(categoria === "complemento"){
+    tallaInput.value = "";
+    tallaInput.disabled = true;
+    tallaInput.placeholder = "No aplica";
+  } else {
+    var item = catalogoItem("uniforme", slug);
+    if(item && item.tallaFija){
+      tallaInput.value = item.tallaFija;
+      tallaInput.disabled = true;
+    } else {
+      tallaInput.value = "";
+      tallaInput.disabled = false;
+      tallaInput.placeholder = "Ej. CH, M, G, XL";
+    }
+  }
+}
+function wireUniformesView(el){
+  poblarInvTipoSelect();
+  byId("invCategoria").addEventListener("change", poblarInvTipoSelect);
+  byId("invTipo").addEventListener("change", actualizarInvTallaUI);
+  el.querySelector('[data-action="inv-agregar"]').addEventListener("click", function(){
+    var categoria = val("invCategoria");
+    var tipo = val("invTipo");
+    var talla = categoria === "complemento" ? "" : val("invTalla").trim().toUpperCase();
+    var cantidad = parseInt(val("invCantidad"), 10) || 0;
+    if(!tipo){ alert("Selecciona una prenda."); return; }
+    if(categoria === "uniforme" && !talla){ alert("Indica la talla."); return; }
+    if(cantidad <= 0){ alert("La cantidad debe ser mayor a cero."); return; }
+    state.uniformeInventario.push({ id: uid(), categoria: categoria, tipo: tipo, talla: talla, cantidad: cantidad });
+    saveState();
+    renderUniformesView(el);
+  });
+  wireInvListaBotones(el);
+  byId("machoteValeFile").addEventListener("change", function(e2){
+    var file = e2.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      state.machoteVale = String(ev.target.result).split(",")[1];
+      saveState();
+      renderUniformesView(el);
+    };
+    reader.readAsDataURL(file);
+  });
+  var descBtn = el.querySelector('[data-action="descargar-machote-vale"]');
+  if(descBtn){
+    descBtn.addEventListener("click", function(){
+      downloadBlob(base64ToBlob(state.machoteVale), "Machote_Vale_Uniforme.docx");
+    });
+  }
+}
+function wireInvListaBotones(el){
+  var cants = el.querySelectorAll("[data-inv-cant]");
+  var i;
+  for(i=0;i<cants.length;i++){
+    cants[i].addEventListener("change", function(){
+      var id = this.getAttribute("data-inv-cant");
+      var nuevo = parseInt(this.value, 10);
+      if(isNaN(nuevo) || nuevo < 0) nuevo = 0;
+      for(var j=0;j<state.uniformeInventario.length;j++){
+        if(state.uniformeInventario[j].id === id){ state.uniformeInventario[j].cantidad = nuevo; break; }
+      }
+      saveState();
+    });
+  }
+  var dels = el.querySelectorAll("[data-inv-del]");
+  for(i=0;i<dels.length;i++){
+    dels[i].addEventListener("click", function(){
+      var id = this.getAttribute("data-inv-del");
+      state.uniformeInventario = state.uniformeInventario.filter(function(it){ return it.id !== id; });
+      saveState();
+      renderUniformesView(el);
+    });
+  }
+}
+
+/* ================= VALE DE UNIFORME ================= */
+function blobToBase64(blob, cb){
+  var reader = new FileReader();
+  reader.onload = function(ev){ cb(String(ev.target.result).split(",")[1]); };
+  reader.readAsDataURL(blob);
+}
+function buildValeVars(e, folio, fecha, servicio, seleccion){
+  var vars = {
+    nombre: e.nombre, servicio: servicio || e.area || "", empresa: e.empresa,
+    fecha_entrega: fmtDate(fecha), folio_vale: folio
+  };
+  var i;
+  for(i=0;i<CAT_UNIFORME.length;i++){
+    var it = CAT_UNIFORME[i];
+    var sel = seleccion[it.slug];
+    if(!it.tallaFija){ vars[it.slug + "_talla"] = sel ? (sel.talla || "") : ""; }
+    vars[it.slug + "_cant"] = sel ? (sel.cantidad || "") : "";
+    vars[it.slug + "_bord"] = sel ? (sel.bordado || "") : "";
+  }
+  for(i=0;i<CAT_COMPLEMENTOS.length;i++){
+    var c = CAT_COMPLEMENTOS[i];
+    var selc = seleccion[c.slug];
+    vars[c.slug + "_cant"] = selc ? (selc.cantidad || "") : "";
+  }
+  return vars;
+}
+function renderValeView(el, id){
+  var e = findEmployee(id);
+  if(!e){ el.innerHTML = '<div class="empty-msg">Empleado no encontrado.</div>'; return; }
+  if(!e.vales) e.vales = [];
+  var html = '<a class="back-link" data-nav="ficha">&larr; Volver a la ficha</a>';
+  html += '<h1 class="view-title">Vale de uniforme &middot; '+esc(e.nombre)+' <span class="pill '+(e.empresa==="ROANSA"?"pill-roansa":"pill-spg")+'">'+e.empresa+'</span></h1>';
+  if(!state.machoteVale){
+    html += '<div class="note-box">No hay un machote de Word configurado para el vale de uniforme. Ve a la sección Uniformes para subir el archivo .docx.</div>';
+    html += '<button class="btn secondary" data-action="ir-uniformes">Ir a Uniformes</button>';
+    el.innerHTML = html;
+    el.querySelector('[data-nav="ficha"]').addEventListener("click", function(){ switchView("ficha", e.id); });
+    el.querySelector('[data-action="ir-uniformes"]').addEventListener("click", function(){ switchView("uniformes"); });
+    return;
+  }
+
+  html += '<div class="form-grid" style="max-width:640px;margin-bottom:16px;">';
+  html += '<div class="form-field"><label>Servicio</label><input type="text" id="valeServicio" value="'+esc(e.area||"")+'"></div>';
+  html += '<div class="form-field"><label>Fecha de entrega</label><input type="date" id="valeFecha" value="'+new Date().toISOString().slice(0,10)+'"></div>';
+  html += '</div>';
+
+  html += '<div class="note-box">Marca las prendas que se entregan, la talla y la cantidad. Al generar el vale se descontará automáticamente del inventario.</div>';
+
+  html += '<h3>Uniforme</h3><div id="valeUniformeItems">' + valeItemsUniformeHTML() + '</div>';
+  html += '<h3 style="margin-top:20px;">Complementos y equipo</h3><div id="valeComplementoItems">' + valeItemsComplementosHTML() + '</div>';
+
+  html += '<button class="btn" data-action="generar-vale" style="margin-top:18px;">Generar y descargar vale (.docx)</button>';
+  html += '<div id="valeStatus" style="margin-top:14px;font-size:13px;color:#2e9e4c;font-weight:600;"></div>';
+
+  html += '<h3 style="margin-top:28px;">Vales entregados anteriormente</h3><div id="valesLista">' + fichaValesListaHTML(e) + '</div>';
+
+  el.innerHTML = html;
+  el.querySelector('[data-nav="ficha"]').addEventListener("click", function(){ switchView("ficha", e.id); });
+  wireValeForm(el, e);
+  wireValesLista(el, e);
+}
+function valeItemsUniformeHTML(){
+  var html = "";
+  for(var i=0;i<CAT_UNIFORME.length;i++){
+    var it = CAT_UNIFORME[i];
+    html += '<div class="doc-row" data-vale-item="'+it.slug+'">';
+    html += '<label style="display:flex;align-items:center;gap:8px;min-width:220px;"><input type="checkbox" data-vale-check="'+it.slug+'"> <span class="doc-name" style="min-width:0;">'+esc(it.nombre)+'</span></label>';
+    html += '<div class="doc-controls">';
+    if(it.tallaFija){
+      html += '<span style="font-size:12.5px;color:#777;">Talla: '+esc(it.tallaFija)+'</span>';
+    } else {
+      html += '<input type="text" placeholder="Talla" style="width:80px;" data-vale-talla="'+it.slug+'">';
+    }
+    html += '<input type="number" min="1" placeholder="Cant." style="width:70px;" data-vale-cant="'+it.slug+'">';
+    html += '<input type="text" placeholder="Bordado (opcional)" style="width:140px;" data-vale-bord="'+it.slug+'">';
+    html += '<span style="font-size:11.5px;color:#999;" data-vale-disp="'+it.slug+'"></span>';
+    html += '</div></div>';
+  }
+  return html;
+}
+function valeItemsComplementosHTML(){
+  var html = "";
+  for(var i=0;i<CAT_COMPLEMENTOS.length;i++){
+    var c = CAT_COMPLEMENTOS[i];
+    html += '<div class="doc-row" data-vale-item="'+c.slug+'">';
+    html += '<label style="display:flex;align-items:center;gap:8px;min-width:220px;"><input type="checkbox" data-vale-check="'+c.slug+'"> <span class="doc-name" style="min-width:0;">'+esc(c.nombre)+'</span></label>';
+    html += '<div class="doc-controls">';
+    html += '<input type="number" min="1" placeholder="Cant." style="width:70px;" data-vale-cant="'+c.slug+'">';
+    html += '<span style="font-size:11.5px;color:#999;" data-vale-disp="'+c.slug+'"></span>';
+    html += '</div></div>';
+  }
+  return html;
+}
+function wireValeForm(el, e){
+  var i;
+  function actualizarDisp(categoria, slug){
+    var span = el.querySelector('[data-vale-disp="'+slug+'"]');
+    if(!span) return;
+    var tallaInput = el.querySelector('[data-vale-talla="'+slug+'"]');
+    var fija = catalogoItem("uniforme", slug);
+    var talla = tallaInput ? tallaInput.value.trim().toUpperCase() : ((fija && fija.tallaFija) || "");
+    var disp = inventarioDisponible(categoria, slug, talla);
+    span.textContent = "(" + disp + " disponible" + (disp === 1 ? "" : "s") + ")";
+  }
+  for(i=0;i<CAT_UNIFORME.length;i++){
+    (function(slug){
+      actualizarDisp("uniforme", slug);
+      var tallaInput = el.querySelector('[data-vale-talla="'+slug+'"]');
+      if(tallaInput){ tallaInput.addEventListener("input", function(){ actualizarDisp("uniforme", slug); }); }
+    })(CAT_UNIFORME[i].slug);
+  }
+  for(i=0;i<CAT_COMPLEMENTOS.length;i++){
+    (function(slug){ actualizarDisp("complemento", slug); })(CAT_COMPLEMENTOS[i].slug);
+  }
+
+  el.querySelector('[data-action="generar-vale"]').addEventListener("click", function(){
+    var servicio = val("valeServicio");
+    var fecha = val("valeFecha");
+    if(!fecha){ alert("Indica la fecha de entrega."); return; }
+    var seleccion = {};
+    var itemsParaDescontar = [];
+    var itemsResumen = [];
+    var faltantes = [];
+    var i2;
+    for(i2=0;i2<CAT_UNIFORME.length;i2++){
+      var it = CAT_UNIFORME[i2];
+      var check = el.querySelector('[data-vale-check="'+it.slug+'"]');
+      if(check && check.checked){
+        var tallaInput = el.querySelector('[data-vale-talla="'+it.slug+'"]');
+        var talla = it.tallaFija || (tallaInput ? tallaInput.value.trim().toUpperCase() : "");
+        var cantInput = el.querySelector('[data-vale-cant="'+it.slug+'"]');
+        var cantidad = parseInt(cantInput.value, 10) || 0;
+        var bordInput = el.querySelector('[data-vale-bord="'+it.slug+'"]');
+        var bordado = bordInput ? bordInput.value.trim() : "";
+        if(!talla){ alert("Indica la talla de: " + it.nombre); return; }
+        if(cantidad <= 0){ alert("Indica una cantidad válida para: " + it.nombre); return; }
+        var disp = inventarioDisponible("uniforme", it.slug, talla);
+        if(cantidad > disp){ faltantes.push(it.nombre + " (talla " + talla + "): pediste " + cantidad + ", disponibles " + disp); }
+        seleccion[it.slug] = { talla: talla, cantidad: cantidad, bordado: bordado };
+        itemsParaDescontar.push({ categoria:"uniforme", tipo:it.slug, talla:talla, cantidad:cantidad });
+        itemsResumen.push({ categoria:"uniforme", tipo:it.slug, nombre:it.nombre, talla:talla, cantidad:cantidad, bordado:bordado });
+      }
+    }
+    for(i2=0;i2<CAT_COMPLEMENTOS.length;i2++){
+      var c = CAT_COMPLEMENTOS[i2];
+      var checkc = el.querySelector('[data-vale-check="'+c.slug+'"]');
+      if(checkc && checkc.checked){
+        var cantInputC = el.querySelector('[data-vale-cant="'+c.slug+'"]');
+        var cantidadC = parseInt(cantInputC.value, 10) || 0;
+        if(cantidadC <= 0){ alert("Indica una cantidad válida para: " + c.nombre); return; }
+        var dispC = inventarioDisponible("complemento", c.slug, "");
+        if(cantidadC > dispC){ faltantes.push(c.nombre + ": pediste " + cantidadC + ", disponibles " + dispC); }
+        seleccion[c.slug] = { cantidad: cantidadC };
+        itemsParaDescontar.push({ categoria:"complemento", tipo:c.slug, talla:"", cantidad:cantidadC });
+        itemsResumen.push({ categoria:"complemento", tipo:c.slug, nombre:c.nombre, talla:"", cantidad:cantidadC, bordado:"" });
+      }
+    }
+    if(itemsResumen.length === 0){ alert("Selecciona al menos una prenda o artículo para entregar."); return; }
+    if(faltantes.length > 0){
+      alert("No hay inventario suficiente para:\n" + faltantes.join("\n") + "\n\nAjusta las cantidades o agrega más inventario antes de generar el vale.");
+      return;
+    }
+    try{
+      var folio = "VALE-" + String(state.valeCounter).padStart(4, "0");
+      var vars = buildValeVars(e, folio, fecha, servicio, seleccion);
+      var blob = generarDocxDesdeMachote(state.machoteVale, vars);
+      var fileName = "Vale_Uniforme_" + (e.nombre || "empleado").replace(/[^a-zA-Z0-9]+/g, "_") + "_" + folio + ".docx";
+      downloadBlob(blob, fileName);
+      for(i2=0;i2<itemsParaDescontar.length;i2++){
+        var d = itemsParaDescontar[i2];
+        descontarInventario(d.categoria, d.tipo, d.talla, d.cantidad);
+      }
+      state.valeCounter++;
+      blobToBase64(blob, function(base64){
+        if(!e.vales) e.vales = [];
+        e.vales.push({ id: uid(), folio: folio, fecha: fecha, servicio: servicio, empresa: e.empresa, items: itemsResumen, docxBase64: base64, adjuntadoExpediente: false });
+        saveState();
+        var statusEl = byId("valeStatus");
+        if(statusEl){ statusEl.textContent = "Vale " + folio + " generado y descargado como " + fileName + "."; }
+        var lista = byId("valesLista") || byId("fichaValesContainer");
+        if(lista){ lista.innerHTML = fichaValesListaHTML(e); wireValesLista(el, e); }
+      });
+    }catch(err){
+      var msg = err.message;
+      if(err.properties && err.properties.errors && err.properties.errors.length){
+        msg = err.properties.errors.map(function(er){ return er.message; }).join(" | ");
+      }
+      alert("No se pudo generar el vale: " + msg);
+    }
+  });
+}
+function fichaValesListaHTML(e){
+  var vales = e.vales || [];
+  if(vales.length === 0){ return '<div class="empty-msg">Sin vales de uniforme generados.</div>'; }
+  var lista = vales.slice().reverse();
+  var html = "";
+  for(var i=0;i<lista.length;i++){
+    var v = lista[i];
+    var resumen = v.items.map(function(it){ return it.nombre + (it.talla ? (" (" + it.talla + ")") : "") + " x" + it.cantidad; }).join(", ");
+    html += '<div class="doc-row"><div class="doc-name" style="min-width:0;">' + esc(v.folio) + ' &middot; ' + fmtDate(v.fecha) + '<br><span style="font-weight:400;font-size:12px;color:#777;">' + esc(resumen) + '</span></div>';
+    html += '<div class="doc-controls">';
+    html += '<span class="doc-status-tag ' + (v.adjuntadoExpediente ? "tag-recibido" : "tag-pendiente") + '">' + (v.adjuntadoExpediente ? "Adjunto al expediente" : "No adjuntado") + '</span>';
+    html += '<button class="btn small secondary" data-vale-descargar="' + v.id + '">Descargar de nuevo</button>';
+    html += '<button class="btn small secondary" data-vale-adjuntar="' + v.id + '">' + (v.adjuntadoExpediente ? "Quitar del expediente" : "Adjuntar al expediente") + '</button>';
+    html += '</div></div>';
+  }
+  return html;
+}
+function wireValesLista(el, e){
+  var descBtns = el.querySelectorAll("[data-vale-descargar]");
+  var i;
+  for(i=0;i<descBtns.length;i++){
+    descBtns[i].addEventListener("click", function(){
+      var id = this.getAttribute("data-vale-descargar");
+      var v = null;
+      for(var j=0;j<e.vales.length;j++){ if(e.vales[j].id === id){ v = e.vales[j]; break; } }
+      if(!v) return;
+      downloadBlob(base64ToBlob(v.docxBase64), "Vale_Uniforme_" + (e.nombre||"empleado").replace(/[^a-zA-Z0-9]+/g,"_") + "_" + v.folio + ".docx");
+    });
+  }
+  var adjBtns = el.querySelectorAll("[data-vale-adjuntar]");
+  for(i=0;i<adjBtns.length;i++){
+    adjBtns[i].addEventListener("click", function(){
+      var id = this.getAttribute("data-vale-adjuntar");
+      for(var j=0;j<e.vales.length;j++){
+        if(e.vales[j].id === id){ e.vales[j].adjuntadoExpediente = !e.vales[j].adjuntadoExpediente; break; }
+      }
+      saveState();
+      var lista = byId("valesLista") || byId("fichaValesContainer");
+      if(lista){ lista.innerHTML = fichaValesListaHTML(e); wireValesLista(el, e); }
     });
   }
 }
