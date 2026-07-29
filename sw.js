@@ -1,5 +1,5 @@
-var CACHE_NAME = "rh-roansa-v1";
-var APP_SHELL = ["./index.html", "./manifest.json"];
+var CACHE_NAME = "rh-roansa-v2";
+var APP_SHELL = ["./manifest.json"];
 
 self.addEventListener("install", function(event){
   event.waitUntil(
@@ -21,6 +21,15 @@ self.addEventListener("fetch", function(event){
   var url = event.request.url;
   /* Nunca cachear llamadas a Supabase (datos y documentos en tiempo real) ni al CDN */
   if(url.indexOf("supabase.co") !== -1 || url.indexOf("jsdelivr.net") !== -1){
+    return;
+  }
+  /* La página principal (index.html) siempre se pide primero a internet,
+     así los cambios y actualizaciones se ven de inmediato en todas las
+     computadoras, sin quedarse con una copia vieja guardada. */
+  if(event.request.mode === "navigate" || url.indexOf("index.html") !== -1){
+    event.respondWith(
+      fetch(event.request).catch(function(){ return caches.match(event.request); })
+    );
     return;
   }
   event.respondWith(
