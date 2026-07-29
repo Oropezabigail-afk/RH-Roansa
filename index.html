@@ -469,7 +469,7 @@ function cargarListasDesdeSupabase(){
   });
   var p3 = sb.from("inventario_items").select("*").then(function(res){
     if(res.error){ console.warn("No se pudo cargar el inventario:", res.error.message); return; }
-    state.uniformeInventario = (res.data || []).map(function(r){ return { id:r.id, categoria:r.categoria, tipo:r.tipo, talla:r.talla || "", cantidad:r.cantidad || 0 }; });
+    state.uniformeInventario = (res.data || []).map(function(r){ return { id:r.id, categoria:r.categoria, tipo:r.tipo, talla:r.talla || "", cantidad:r.cantidad || 0, estado:r.estado || "NUEVO" }; });
   });
   var p4 = sb.from("autos").select("*").then(function(res){
     if(res.error){ console.warn("No se pudieron cargar los autos:", res.error.message); return; }
@@ -1761,21 +1761,21 @@ function catalogoItem(categoria, slug){
   return null;
 }
 function ignoraTalla(categoria){ return categoria === "complemento" || categoria === "antidoping"; }
-function inventarioDisponible(categoria, tipo, talla){
+function inventarioDisponible(categoria, tipo, talla, estado){
   var total = 0;
   for(var i=0;i<state.uniformeInventario.length;i++){
     var it = state.uniformeInventario[i];
-    if(it.categoria === categoria && it.tipo === tipo && (ignoraTalla(categoria) || it.talla === talla)){
+    if(it.categoria === categoria && it.tipo === tipo && (ignoraTalla(categoria) || it.talla === talla) && (estado === undefined || (it.estado || "NUEVO") === estado)){
       total += Number(it.cantidad) || 0;
     }
   }
   return total;
 }
-function descontarInventario(categoria, tipo, talla, cantidad){
+function descontarInventario(categoria, tipo, talla, cantidad, estado){
   var restante = Number(cantidad) || 0;
   for(var i=0;i<state.uniformeInventario.length && restante > 0;i++){
     var it = state.uniformeInventario[i];
-    if(it.categoria === categoria && it.tipo === tipo && (ignoraTalla(categoria) || it.talla === talla)){
+    if(it.categoria === categoria && it.tipo === tipo && (ignoraTalla(categoria) || it.talla === talla) && (estado === undefined || (it.estado || "NUEVO") === estado)){
       var uso = Math.min(Number(it.cantidad) || 0, restante);
       it.cantidad = (Number(it.cantidad) || 0) - uso;
       restante -= uso;
@@ -1840,6 +1840,7 @@ function renderInvUniformeTab(el){
   html += '<div class="form-field"><label>Prenda / artículo</label><select id="invTipo"></select></div>';
   html += '<div class="form-field"><label>Talla</label><input type="text" id="invTalla" placeholder="Ej. CH, M, G, XL"></div>';
   html += '<div class="form-field"><label>Cantidad disponible</label><input type="number" id="invCantidad" min="0" value="1"></div>';
+  html += '<div class="form-field"><label>Estado</label><select id="invEstado"><option value="NUEVO">Nuevo</option><option value="USADO">Usado</option></select></div>';
   html += '</div>';
   html += '<button class="btn mut-accion" data-action="inv-agregar" style="margin-top:10px;">Agregar al inventario</button>';
   html += '</div>';
@@ -1869,7 +1870,8 @@ function inventarioTablaHTML(categorias){
     var cat = catalogoItem(it.categoria, it.tipo);
     var nombre = cat ? cat.nombre : it.tipo;
     var bajo = (Number(it.cantidad)||0) <= 2;
-    html += '<div class="doc-row"><div class="doc-name">' + esc(nombre) + (ignoraTalla(it.categoria) ? "" : (" &middot; Talla " + esc(it.talla || "—"))) + (bajo ? ' <span class="pill pill-warn">Stock bajo</span>' : "") + '</div>';
+    var estadoTxt = it.categoria === "antidoping" ? "" : (" &middot; " + ((it.estado||"NUEVO")==="USADO" ? "Usado" : "Nuevo"));
+    html += '<div class="doc-row"><div class="doc-name">' + esc(nombre) + (ignoraTalla(it.categoria) ? "" : (" &middot; Talla " + esc(it.talla || "—"))) + estadoTxt + (bajo ? ' <span class="pill pill-warn">Stock bajo</span>' : "") + '</div>';
     html += '<div class="doc-controls">';
     html += '<input type="number" min="0" style="width:80px;" class="mut-accion" value="' + esc(it.cantidad) + '" data-inv-cant="' + it.id + '">';
     html += '<button class="btn small secondary mut-accion" data-inv-del="' + it.id + '">Eliminar</button>';
@@ -1915,13 +1917,25 @@ function wireUniformesView(el){
     var tipo = val("invTipo");
     var talla = ignoraTalla(categoria) ? "" : val("invTalla").trim().toUpperCase();
     var cantidad = parseInt(val("invCantidad"), 10) || 0;
+    var estado = val("invEstado") || "NUEVO";
     if(!tipo){ alert("Selecciona una prenda."); return; }
     if(!ignoraTalla(categoria) && !talla){ alert("Indica la talla."); return; }
     if(cantidad <= 0){ alert("La cantidad debe ser mayor a cero."); return; }
-    var nuevoInv = { id: uid(), categoria: categoria, tipo: tipo, talla: talla, cantidad: cantidad };
-    state.uniformeInventario.push(nuevoInv);
+    var existente = null;
+    for(var k=0;k<state.uniformeInventario.length;k++){
+      var itk = state.uniformeInventario[k];
+      if(itk.categoria === categoria && itk.tipo === tipo && itk.talla === talla && (itk.estado||"NUEVO") === estado){ existente = itk; break; }
+    }
+    var itemGuardado;
+    if(existente){
+      existente.cantidad = (Number(existente.cantidad)||0) + cantidad;
+      itemGuardado = existente;
+    } else {
+      itemGuardado = { id: uid(), categoria: categoria, tipo: tipo, talla: talla, cantidad: cantidad, estado: estado };
+      state.uniformeInventario.push(itemGuardado);
+    }
     saveState();
-    dbUpsert("inventario_items", nuevoInv);
+    dbUpsert("inventario_items", itemGuardado);
     renderInvUniformeTab(el);
   });
   wireInvListaBotones(el, renderInvUniformeTab);
@@ -2277,10 +2291,10 @@ function wireValeForm(el, e){
         var estado = estadoSel ? estadoSel.value : "NUEVO";
         if(!talla){ alert("Indica la talla de: " + it.nombre); return; }
         if(cantidad <= 0){ alert("Indica una cantidad válida para: " + it.nombre); return; }
-        var disp = inventarioDisponible("uniforme", it.slug, talla);
-        if(cantidad > disp){ faltantes.push(it.nombre + " (talla " + talla + "): pediste " + cantidad + ", disponibles " + disp); }
+        var disp = inventarioDisponible("uniforme", it.slug, talla, estado);
+        if(cantidad > disp){ faltantes.push(it.nombre + " (talla " + talla + ", " + (estado==="USADO"?"usado":"nuevo") + "): pediste " + cantidad + ", disponibles " + disp); }
         seleccion[it.slug] = { talla: talla, cantidad: cantidad, bordado: bordado, estado: estado };
-        itemsParaDescontar.push({ categoria:"uniforme", tipo:it.slug, talla:talla, cantidad:cantidad });
+        itemsParaDescontar.push({ categoria:"uniforme", tipo:it.slug, talla:talla, cantidad:cantidad, estado:estado });
         itemsResumen.push({ categoria:"uniforme", tipo:it.slug, nombre:it.nombre, talla:talla, cantidad:cantidad, bordado:bordado, estado:estado });
       }
     }
@@ -2293,10 +2307,10 @@ function wireValeForm(el, e){
         var estadoSelC = el.querySelector('[data-vale-estado="'+c.slug+'"]');
         var estadoC = estadoSelC ? estadoSelC.value : "NUEVO";
         if(cantidadC <= 0){ alert("Indica una cantidad válida para: " + c.nombre); return; }
-        var dispC = inventarioDisponible("complemento", c.slug, "");
-        if(cantidadC > dispC){ faltantes.push(c.nombre + ": pediste " + cantidadC + ", disponibles " + dispC); }
+        var dispC = inventarioDisponible("complemento", c.slug, "", estadoC);
+        if(cantidadC > dispC){ faltantes.push(c.nombre + " (" + (estadoC==="USADO"?"usado":"nuevo") + "): pediste " + cantidadC + ", disponibles " + dispC); }
         seleccion[c.slug] = { cantidad: cantidadC, estado: estadoC };
-        itemsParaDescontar.push({ categoria:"complemento", tipo:c.slug, talla:"", cantidad:cantidadC });
+        itemsParaDescontar.push({ categoria:"complemento", tipo:c.slug, talla:"", cantidad:cantidadC, estado:estadoC });
         itemsResumen.push({ categoria:"complemento", tipo:c.slug, nombre:c.nombre, talla:"", cantidad:cantidadC, bordado:"", estado:estadoC });
       }
     }
@@ -2313,7 +2327,7 @@ function wireValeForm(el, e){
       downloadBlob(blob, fileName);
       for(i2=0;i2<itemsParaDescontar.length;i2++){
         var d = itemsParaDescontar[i2];
-        descontarInventario(d.categoria, d.tipo, d.talla, d.cantidad);
+        descontarInventario(d.categoria, d.tipo, d.talla, d.cantidad, d.estado);
       }
       state.valeCounter++;
       blobToBase64(blob, function(base64){
