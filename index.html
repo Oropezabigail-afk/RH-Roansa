@@ -172,13 +172,21 @@
 <body>
 
 <div id="loginScreen">
-  <div class="login-card">
+  <div class="login-card" id="loginCardNormal">
     <div class="login-logo-box" id="loginLogoBox"></div>
     <h2>Sistema de Recursos Humanos</h2>
     <input type="email" id="loginEmail" placeholder="Correo" autocomplete="username">
     <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password">
     <div id="loginError"></div>
     <button id="loginBtn">Ingresar</button>
+  </div>
+  <div class="login-card" id="loginCardRecovery" style="display:none;">
+    <div class="login-logo-box" id="loginLogoBoxRecovery"></div>
+    <h2>Elige tu nueva contraseña</h2>
+    <input type="password" id="recoveryPassword1" placeholder="Nueva contraseña" autocomplete="new-password">
+    <input type="password" id="recoveryPassword2" placeholder="Confirmar contraseña" autocomplete="new-password">
+    <div id="recoveryError"></div>
+    <button id="recoveryBtn">Guardar nueva contraseña</button>
   </div>
 </div>
 
@@ -614,17 +622,56 @@ function findEmployee(id){
 }
 
 /* ================= LOGIN Y PERFILES ================= */
+var enRecuperacion = false;
+function mostrarPantallaRecuperacion(){
+  enRecuperacion = true;
+  byId("loginLogoBoxRecovery").innerHTML = logoFullHTML(50);
+  byId("loginScreen").style.display = "flex";
+  byId("loginCardNormal").style.display = "none";
+  byId("loginCardRecovery").style.display = "block";
+}
+function guardarNuevaContrasena(){
+  var p1 = val("recoveryPassword1");
+  var p2 = val("recoveryPassword2");
+  byId("recoveryError").textContent = "";
+  if(!p1 || p1.length < 6){ byId("recoveryError").textContent = "La contraseña debe tener al menos 6 caracteres."; return; }
+  if(p1 !== p2){ byId("recoveryError").textContent = "Las contraseñas no coinciden."; return; }
+  var btn = byId("recoveryBtn");
+  btn.disabled = true;
+  btn.textContent = "Guardando...";
+  sb.auth.updateUser({ password: p1 }).then(function(res){
+    btn.disabled = false;
+    btn.textContent = "Guardar nueva contraseña";
+    if(res.error){
+      byId("recoveryError").textContent = "No se pudo guardar: " + res.error.message;
+      return;
+    }
+    enRecuperacion = false;
+    byId("recoveryError").style.color = "#2a7";
+    byId("recoveryError").textContent = "Contraseña actualizada. Entrando...";
+    sb.auth.getSession().then(function(r2){
+      var session = r2.data && r2.data.session;
+      if(session && session.user){ cargarPerfilYEntrar(session.user); }
+    });
+  });
+}
 function initLogin(){
   byId("loginLogoBox").innerHTML = logoFullHTML(50);
   byId("loginBtn").addEventListener("click", tryLogin);
   byId("loginPassword").addEventListener("keydown", function(e){ if(e.key === "Enter") tryLogin(); });
   byId("loginEmail").addEventListener("keydown", function(e){ if(e.key === "Enter") tryLogin(); });
+  byId("recoveryBtn").addEventListener("click", guardarNuevaContrasena);
+  byId("recoveryPassword2").addEventListener("keydown", function(e){ if(e.key === "Enter") guardarNuevaContrasena(); });
+  sb.auth.onAuthStateChange(function(event, session){
+    if(event === "PASSWORD_RECOVERY"){ mostrarPantallaRecuperacion(); }
+  });
   sb.auth.getSession().then(function(res){
+    if(enRecuperacion) return;
     var session = res.data && res.data.session;
     if(session && session.user){ cargarPerfilYEntrar(session.user); }
     else { byId("loginScreen").style.display = "flex"; }
   }).catch(function(){
-    byId("loginScreen").style.display = "flex";
+    if(!enRecuperacion) byId("loginScreen").style.display = "flex";
   });
 }
 function cargarPerfilYEntrar(user){
