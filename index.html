@@ -187,6 +187,7 @@
     <input type="password" id="recoveryPassword2" placeholder="Confirmar contraseña" autocomplete="new-password">
     <div id="recoveryError"></div>
     <button id="recoveryBtn">Guardar nueva contraseña</button>
+    <button id="recoveryCancelBtn" type="button" style="background:transparent;color:#666;box-shadow:none;margin-top:8px;">Cancelar y volver al inicio de sesión</button>
   </div>
 </div>
 
@@ -623,6 +624,15 @@ function findEmployee(id){
 
 /* ================= LOGIN Y PERFILES ================= */
 var enRecuperacion = false;
+function cancelarRecuperacion(){
+  enRecuperacion = false;
+  try{ sb.auth.signOut(); }catch(ex){}
+  try{ history.replaceState(null, "", window.location.pathname + window.location.search); }catch(ex){}
+  byId("recoveryError").textContent = "";
+  byId("loginCardRecovery").style.display = "none";
+  byId("loginCardNormal").style.display = "block";
+  byId("loginScreen").style.display = "flex";
+}
 function mostrarPantallaRecuperacion(){
   enRecuperacion = true;
   byId("loginLogoBoxRecovery").innerHTML = logoFullHTML(50);
@@ -662,6 +672,12 @@ function initLogin(){
   byId("loginEmail").addEventListener("keydown", function(e){ if(e.key === "Enter") tryLogin(); });
   byId("recoveryBtn").addEventListener("click", guardarNuevaContrasena);
   byId("recoveryPassword2").addEventListener("keydown", function(e){ if(e.key === "Enter") guardarNuevaContrasena(); });
+  byId("recoveryCancelBtn").addEventListener("click", cancelarRecuperacion);
+  /* Si la liga trae un token de recuperación viejo/vencido pegado en la URL,
+     lo limpiamos para que no se quede atorada la próxima vez que se abra. */
+  if(window.location.hash && window.location.hash.indexOf("type=recovery") === -1){
+    try{ history.replaceState(null, "", window.location.pathname + window.location.search); }catch(ex){}
+  }
   sb.auth.onAuthStateChange(function(event, session){
     if(event === "PASSWORD_RECOVERY"){ mostrarPantallaRecuperacion(); }
   });
