@@ -1276,6 +1276,7 @@ function asignarFolio(e){
 /* ================= DAR DE ALTA ================= */
 function newAltaDraft(){
   return {
+    id: uid(),
     empresa:"", nombre:"", puesto:"", area:"", status:"Activo",
     fecha_ingreso:"", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
     calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México",
@@ -1366,23 +1367,82 @@ function formSelect(name, label, options, selected){
 function altaStep2HTML(){
   var d = state.altaDraft;
   var html = '<h3>2. Documentos del expediente</h3>';
-  html += '<div class="note-box">Puedes adjuntar el archivo del documento o simplemente marcarlo como recibido si ya se entregó en físico. Al subir un archivo se generará una descarga local para que lo subas manualmente a la carpeta de Drive del empleado.</div>';
-  for(var i=0;i<DOCS.length;i++){
-    var name = DOCS[i];
-    var info = d.documentos[name];
-    html += '<div class="doc-row" data-doc="'+esc(name)+'">';
-    html += '<div class="doc-name">'+esc(name)+'</div>';
-    html += '<div class="doc-controls">';
-    html += '<input type="file" class="doc-file-input" data-doc-file="'+esc(name)+'">';
-    html += '<label style="font-size:12.5px;"><input type="checkbox" class="doc-recibido-input" data-doc-check="'+esc(name)+'" '+(info.recibido?"checked":"")+'> Marcar como recibido</label>';
-    html += '<span class="doc-status-tag '+(info.recibido?"tag-recibido":"tag-pendiente")+'" data-doc-tag="'+esc(name)+'">'+(info.recibido?"Recibido":"Pendiente")+(info.nombreArchivo ? (" · " + esc(info.nombreArchivo)) : "")+'</span>';
-    html += '</div></div>';
-  }
+  html += '<div class="note-box">Sube el archivo de cada documento; queda guardado en la nube dentro de la app (no en este navegador). Los que falten los puedes completar después desde la ficha del empleado.</div>';
+  html += '<div id="altaDocsContainer">' + altaDocsListaHTML() + '</div>';
   html += '<div style="margin-top:22px;display:flex;justify-content:space-between;">';
   html += '<button class="btn secondary" data-action="back2">&larr; Atrás</button>';
   html += '<button class="btn" data-action="next2">Siguiente &rarr;</button>';
   html += '</div>';
   return html;
+}
+function altaDocsListaHTML(){
+  var d = state.altaDraft;
+  var html = "";
+  for(var i=0;i<DOCS.length;i++){
+    var name = DOCS[i];
+    var info = d.documentos[name] || { recibido:false, storage_path:"", nombreArchivo:"" };
+    var opcional = esDocOpcional(name);
+    html += '<div class="doc-row" data-doc="'+esc(name)+'">';
+    html += '<div class="doc-name">'+esc(name)+(opcional ? ' <span style="font-weight:400;color:#999;font-size:11.5px;">(opcional)</span>' : '')+'</div>';
+    html += '<div class="doc-controls">';
+    if(info.recibido){
+      html += '<span class="doc-status-tag tag-recibido">Recibido'+(info.nombreArchivo ? (" &middot; " + esc(info.nombreArchivo)) : "")+'</span>';
+      if(info.storage_path){ html += '<button class="btn small secondary" data-adoc-ver="'+esc(name)+'">Ver / Descargar</button>'; }
+      html += '<button class="btn small secondary" data-adoc-actualizar="'+esc(name)+'">Actualizar documento</button>';
+      html += '<input type="file" style="display:none;" data-adoc-file="'+esc(name)+'">';
+    } else {
+      html += '<input type="file" data-adoc-file="'+esc(name)+'">';
+      html += '<span class="doc-status-tag tag-pendiente">'+(opcional ? "No entregado (opcional)" : "Pendiente")+'</span>';
+    }
+    html += '</div>';
+    html += '<div class="doc-upload-status" data-adoc-status="'+esc(name)+'" style="font-size:12px;color:#888;margin-top:4px;"></div>';
+    html += '</div>';
+  }
+  return html;
+}
+function wireAltaDocs(el){
+  var cont = byId("altaDocsContainer");
+  if(!cont) return;
+  var d = state.altaDraft;
+  var fileInputs = cont.querySelectorAll("[data-adoc-file]");
+  for(var i=0;i<fileInputs.length;i++){
+    fileInputs[i].addEventListener("change", function(ev){
+      var docName = this.getAttribute("data-adoc-file");
+      var file = ev.target.files[0];
+      if(!file) return;
+      var estadoEl = cont.querySelector('[data-adoc-status="'+cssEscape(docName)+'"]');
+      if(estadoEl) estadoEl.textContent = "Subiendo...";
+      var path = "empleados/" + d.id + "/" + Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9._-]+/g, "_");
+      sb.storage.from("documentos").upload(path, file, { upsert: true }).then(function(res){
+        if(res.error){
+          if(estadoEl) estadoEl.textContent = "Error al subir: " + res.error.message;
+          return;
+        }
+        if(!d.documentos[docName]) d.documentos[docName] = { recibido:false, storage_path:"", nombreArchivo:"" };
+        d.documentos[docName].recibido = true;
+        d.documentos[docName].storage_path = path;
+        d.documentos[docName].nombreArchivo = file.name;
+        cont.innerHTML = altaDocsListaHTML();
+        wireAltaDocs(el);
+      });
+    });
+  }
+  var verBtns = cont.querySelectorAll("[data-adoc-ver]");
+  for(i=0;i<verBtns.length;i++){
+    verBtns[i].addEventListener("click", function(){
+      var docName = this.getAttribute("data-adoc-ver");
+      var info = d.documentos[docName];
+      if(info && info.storage_path){ abrirDocumentoStorage(info.storage_path, false, info.nombreArchivo); }
+    });
+  }
+  var actBtns = cont.querySelectorAll("[data-adoc-actualizar]");
+  for(i=0;i<actBtns.length;i++){
+    actBtns[i].addEventListener("click", function(){
+      var docName = this.getAttribute("data-adoc-actualizar");
+      var input = cont.querySelector('[data-adoc-file="'+cssEscape(docName)+'"]');
+      if(input) input.click();
+    });
+  }
 }
 function altaStep3HTML(){
   var d = state.altaDraft;
@@ -1439,39 +1499,13 @@ function wireAltaStep(el){
       });
     }
   } else if(state.altaStep === 2){
-    var fileInputs = el.querySelectorAll("[data-doc-file]");
-    for(i=0;i<fileInputs.length;i++){
-      fileInputs[i].addEventListener("change", function(e){
-        var docName = this.getAttribute("data-doc-file");
-        var file = e.target.files[0];
-        if(!file) return;
-        var reader = new FileReader();
-        reader.onload = function(ev){
-          d.documentos[docName].recibido = true;
-          d.documentos[docName].archivo = ev.target.result;
-          d.documentos[docName].nombreArchivo = file.name;
-          downloadDataUrl(file.name, ev.target.result);
-          updateDocRowUI(docName);
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-    var checks = el.querySelectorAll("[data-doc-check]");
-    for(i=0;i<checks.length;i++){
-      checks[i].addEventListener("change", function(){
-        var docName = this.getAttribute("data-doc-check");
-        d.documentos[docName].recibido = this.checked;
-        if(!this.checked){ d.documentos[docName].archivo = null; d.documentos[docName].nombreArchivo = ""; }
-        updateDocRowUI(docName);
-      });
-    }
+    wireAltaDocs(el);
     el.querySelector('[data-action="back2"]').addEventListener("click", function(){ state.altaStep = 1; renderAltaView(el); });
     el.querySelector('[data-action="next2"]').addEventListener("click", function(){ state.altaStep = 3; renderAltaView(el); });
   } else if(state.altaStep === 3){
     el.querySelector('[data-action="back3"]').addEventListener("click", function(){ state.altaStep = 2; renderAltaView(el); });
     el.querySelector('[data-action="guardar"]').addEventListener("click", function(){
       var nuevo = JSON.parse(JSON.stringify(state.altaDraft));
-      nuevo.id = uid();
       nuevo.folio = "";
       nuevo.fecha_contrato = "";
       nuevo.contratoTexto = "";
@@ -2535,11 +2569,19 @@ function sspcDocsHTML(e){
     html += '<div class="doc-row">';
     html += '<div class="doc-name">'+esc(doc.nombre)+'</div>';
     html += '<div class="doc-controls">';
-    html += '<input type="file" data-sspc-file="'+i+'">';
-    html += '<label style="font-size:12.5px;"><input type="checkbox" class="mut-accion" data-sspc-check="'+i+'" '+(doc.recibido?"checked":"")+'> Recibido</label>';
-    html += '<span class="doc-status-tag '+(doc.recibido?"tag-recibido":"tag-pendiente")+'">'+(doc.recibido?"Recibido":"Pendiente")+(doc.nombreArchivo?(" &middot; "+esc(doc.nombreArchivo)):"")+'</span>';
+    if(doc.recibido){
+      html += '<span class="doc-status-tag tag-recibido">Recibido'+(doc.nombreArchivo ? (" &middot; " + esc(doc.nombreArchivo)) : "")+'</span>';
+      if(doc.storage_path){ html += '<button class="btn small secondary" data-sspc-ver="'+i+'">Ver / Descargar</button>'; }
+      html += '<button class="btn small secondary mut-accion" data-sspc-actualizar="'+i+'">Actualizar documento</button>';
+      html += '<input type="file" style="display:none;" data-sspc-file="'+i+'">';
+    } else {
+      html += '<input type="file" class="mut-accion" data-sspc-file="'+i+'">';
+      html += '<span class="doc-status-tag tag-pendiente">Pendiente</span>';
+    }
     html += '<button class="btn small secondary mut-accion" data-sspc-del="'+i+'">Quitar</button>';
-    html += '</div></div>';
+    html += '</div>';
+    html += '<div class="doc-upload-status" data-sspc-status="'+i+'" style="font-size:12px;color:#888;margin-top:4px;"></div>';
+    html += '</div>';
   }
   if(e.sspc.documentos.length === 0){ html += '<div class="empty-msg">Aún no hay documentos agregados.</div>'; }
   return html;
@@ -2581,30 +2623,39 @@ function wireSSPCDocs(e, el){
       var idx = parseInt(this.getAttribute("data-sspc-file"), 10);
       var file = ev.target.files[0];
       if(!file) return;
-      var reader = new FileReader();
-      reader.onload = function(evt){
+      var estadoEl = cont.querySelector('[data-sspc-status="'+idx+'"]');
+      if(estadoEl) estadoEl.textContent = "Subiendo...";
+      var path = "empleados/" + e.id + "/sspc/" + Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9._-]+/g, "_");
+      sb.storage.from("documentos").upload(path, file, { upsert: true }).then(function(res){
+        if(res.error){
+          if(estadoEl) estadoEl.textContent = "Error al subir: " + res.error.message;
+          return;
+        }
         e.sspc.documentos[idx].recibido = true;
-        e.sspc.documentos[idx].archivo = evt.target.result;
+        e.sspc.documentos[idx].storage_path = path;
         e.sspc.documentos[idx].nombreArchivo = file.name;
-        downloadDataUrl(file.name, evt.target.result);
+        delete e.sspc.documentos[idx].archivo;
         saveState();
         syncEmployee(e);
         cont.innerHTML = sspcDocsHTML(e);
         wireSSPCDocs(e, el);
-      };
-      reader.readAsDataURL(file);
+      });
     });
   }
-  var checks = cont.querySelectorAll("[data-sspc-check]");
-  for(i=0;i<checks.length;i++){
-    checks[i].addEventListener("change", function(){
-      var idx = parseInt(this.getAttribute("data-sspc-check"), 10);
-      e.sspc.documentos[idx].recibido = this.checked;
-      if(!this.checked){ e.sspc.documentos[idx].archivo = null; e.sspc.documentos[idx].nombreArchivo = ""; }
-      saveState();
-      syncEmployee(e);
-      cont.innerHTML = sspcDocsHTML(e);
-      wireSSPCDocs(e, el);
+  var verBtns = cont.querySelectorAll("[data-sspc-ver]");
+  for(i=0;i<verBtns.length;i++){
+    verBtns[i].addEventListener("click", function(){
+      var idx = parseInt(this.getAttribute("data-sspc-ver"), 10);
+      var doc = e.sspc.documentos[idx];
+      if(doc && doc.storage_path){ abrirDocumentoStorage(doc.storage_path, false, doc.nombreArchivo); }
+    });
+  }
+  var actBtns = cont.querySelectorAll("[data-sspc-actualizar]");
+  for(i=0;i<actBtns.length;i++){
+    actBtns[i].addEventListener("click", function(){
+      var idx = this.getAttribute("data-sspc-actualizar");
+      var input = cont.querySelector('[data-sspc-file="'+idx+'"]');
+      if(input) input.click();
     });
   }
   var dels = cont.querySelectorAll("[data-sspc-del]");
