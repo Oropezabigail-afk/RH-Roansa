@@ -1868,17 +1868,34 @@ function inventarioDisponible(categoria, tipo, talla, estado){
   }
   return total;
 }
-function descontarInventario(categoria, tipo, talla, cantidad, estado){
-  var restante = Number(cantidad) || 0;
-  for(var i=0;i<state.uniformeInventario.length && restante > 0;i++){
-    var it = state.uniformeInventario[i];
-    if(it.categoria === categoria && it.tipo === tipo && (ignoraTalla(categoria) || it.talla === talla) && (estado === undefined || (it.estado || "NUEVO") === estado)){
-      var uso = Math.min(Number(it.cantidad) || 0, restante);
-      it.cantidad = (Number(it.cantidad) || 0) - uso;
-      restante -= uso;
-      dbUpsert("inventario_items", it);
+function ajustarInventarioDB(categoria, tipo, talla, estado, delta){
+  if(!sb) return Promise.resolve({ ok:false, error:"Sin conexión a la base de datos." });
+  return sb.rpc("ajustar_inventario", {
+    p_categoria: categoria, p_tipo: tipo, p_talla: talla || "", p_estado: estado || "NUEVO", p_delta: delta
+  }).then(function(res){
+    if(res.error){ return { ok:false, error: res.error.message }; }
+    var row = res.data;
+    if(row){
+      var encontrado = false;
+      for(var i=0;i<state.uniformeInventario.length;i++){
+        if(state.uniformeInventario[i].id === row.id){
+          state.uniformeInventario[i].cantidad = row.cantidad;
+          encontrado = true;
+          break;
+        }
+      }
+      if(!encontrado){
+        state.uniformeInventario.push({ id: row.id, categoria: row.categoria, tipo: row.tipo, talla: row.talla || "", cantidad: row.cantidad || 0, estado: row.estado || "NUEVO" });
+      }
+      saveState();
     }
-  }
+    return { ok:true, row: row };
+  }, function(err){
+    return { ok:false, error: err && err.message ? err.message : String(err) };
+  });
+}
+function descontarInventario(categoria, tipo, talla, cantidad, estado){
+  return ajustarInventarioDB(categoria, tipo, talla, estado, -(Number(cantidad) || 0));
 }
 function inventarioBajoStock(){
   var vistos = {};
@@ -2018,22 +2035,13 @@ function wireUniformesView(el){
     if(!tipo){ alert("Selecciona una prenda."); return; }
     if(!ignoraTalla(categoria) && !talla){ alert("Indica la talla."); return; }
     if(cantidad <= 0){ alert("La cantidad debe ser mayor a cero."); return; }
-    var existente = null;
-    for(var k=0;k<state.uniformeInventario.length;k++){
-      var itk = state.uniformeInventario[k];
-      if(itk.categoria === categoria && itk.tipo === tipo && itk.talla === talla && (itk.estado||"NUEVO") === estado){ existente = itk; break; }
-    }
-    var itemGuardado;
-    if(existente){
-      existente.cantidad = (Number(existente.cantidad)||0) + cantidad;
-      itemGuardado = existente;
-    } else {
-      itemGuardado = { id: uid(), categoria: categoria, tipo: tipo, talla: talla, cantidad: cantidad, estado: estado };
-      state.uniformeInventario.push(itemGuardado);
-    }
-    saveState();
-    dbUpsert("inventario_items", itemGuardado);
-    renderInvUniformeTab(el);
+    var btnAgregar = el.querySelector('[data-action="inv-agregar"]');
+    btnAgregar.disabled = true;
+    ajustarInventarioDB(categoria, tipo, talla, estado, cantidad).then(function(res){
+      btnAgregar.disabled = false;
+      if(!res.ok){ alert("No se pudo guardar en el inventario: " + res.error); return; }
+      renderInvUniformeTab(el);
+    });
   });
   wireInvListaBotones(el, renderInvUniformeTab);
   byId("machoteValeFile").addEventListener("change", function(e2){
@@ -2148,11 +2156,10 @@ function renderInvAntidopingTab(el){
   el.querySelector('[data-action="ant-agregar-stock"]').addEventListener("click", function(){
     var cant = parseInt(val("antStockCant"), 10) || 0;
     if(cant <= 0){ alert("Indica una cantidad válida."); return; }
-    var nuevoKit = { id: uid(), categoria:"antidoping", tipo:"kit_antidoping", talla:"", cantidad: cant };
-    state.uniformeInventario.push(nuevoKit);
-    saveState();
-    dbUpsert("inventario_items", nuevoKit);
-    renderInvAntidopingTab(el);
+    ajustarInventarioDB("antidoping", "kit_antidoping", "", "NUEVO", cant).then(function(res){
+      if(!res.ok){ alert("No se pudo guardar en el inventario: " + res.error); return; }
+      renderInvAntidopingTab(el);
+    });
   });
   el.querySelector('[data-action="ant-registrar"]').addEventListener("click", function(){
     var empId = val("antEmpleado");
@@ -2162,12 +2169,14 @@ function renderInvAntidopingTab(el){
     if(disponible <= 0){ alert("No hay kits disponibles en el stock. Agrega más antes de registrar."); return; }
     var emp = findEmployee(empId);
     if(!emp) return;
-    descontarInventario("antidoping", "kit_antidoping", "", 1);
-    if(!emp.antidoping_historial) emp.antidoping_historial = [];
-    emp.antidoping_historial.push({ id: uid(), fecha: fecha });
-    saveState();
-    syncEmployee(emp);
-    renderInvAntidopingTab(el);
+    descontarInventario("antidoping", "kit_antidoping", "", 1, "NUEVO").then(function(res){
+      if(!res.ok){ alert("No se pudo descontar del inventario: " + res.error); return; }
+      if(!emp.antidoping_historial) emp.antidoping_historial = [];
+      emp.antidoping_historial.push({ id: uid(), fecha: fecha });
+      saveState();
+      syncEmployee(emp);
+      renderInvAntidopingTab(el);
+    });
   });
   ocultarSiConsulta(el);
 }
@@ -2422,20 +2431,28 @@ function wireValeForm(el, e){
       var blob = generarDocxDesdeMachote(state.machoteVale, vars);
       var fileName = "Vale_Uniforme_" + (e.nombre || "empleado").replace(/[^a-zA-Z0-9]+/g, "_") + "_" + folio + ".docx";
       downloadBlob(blob, fileName);
-      for(i2=0;i2<itemsParaDescontar.length;i2++){
-        var d = itemsParaDescontar[i2];
-        descontarInventario(d.categoria, d.tipo, d.talla, d.cantidad, d.estado);
-      }
-      state.valeCounter++;
-      blobToBase64(blob, function(base64){
-        if(!e.vales) e.vales = [];
-        e.vales.push({ id: uid(), folio: folio, fecha: fecha, servicio: servicio, empresa: e.empresa, items: itemsResumen, docxBase64: base64, adjuntadoExpediente: false });
-        saveState();
-        syncEmployee(e);
-        var statusEl = byId("valeStatus");
-        if(statusEl){ statusEl.textContent = "Vale " + folio + " generado y descargado como " + fileName + "."; }
-        var lista = byId("valesLista") || byId("fichaValesContainer");
-        if(lista){ lista.innerHTML = fichaValesListaHTML(e); wireValesLista(el, e); }
+      var descuentos = itemsParaDescontar.map(function(d){
+        return descontarInventario(d.categoria, d.tipo, d.talla, d.cantidad, d.estado);
+      });
+      Promise.all(descuentos).then(function(resultados){
+        var fallos = resultados.filter(function(r){ return !r.ok; });
+        state.valeCounter++;
+        blobToBase64(blob, function(base64){
+          if(!e.vales) e.vales = [];
+          e.vales.push({ id: uid(), folio: folio, fecha: fecha, servicio: servicio, empresa: e.empresa, items: itemsResumen, docxBase64: base64, adjuntadoExpediente: false });
+          saveState();
+          syncEmployee(e);
+          var statusEl = byId("valeStatus");
+          if(statusEl){
+            statusEl.textContent = "Vale " + folio + " generado y descargado como " + fileName + ".";
+            if(fallos.length > 0){
+              statusEl.style.color = "#b8860b";
+              statusEl.textContent += " Aviso: no se pudo descontar todo el inventario automáticamente (" + fallos.map(function(f){return f.error;}).join("; ") + "). Revísalo en Uniformes.";
+            }
+          }
+          var lista = byId("valesLista") || byId("fichaValesContainer");
+          if(lista){ lista.innerHTML = fichaValesListaHTML(e); wireValesLista(el, e); }
+        });
       });
     }catch(err){
       var msg = err.message;
