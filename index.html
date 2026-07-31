@@ -286,6 +286,9 @@ function esc(s){
 function val(id){ var el = document.getElementById(id); return el ? el.value : ""; }
 function byId(id){ return document.getElementById(id); }
 function uid(){ return "e" + Date.now() + Math.floor(Math.random()*10000); }
+function nombreCompleto(nombres, apellidos){
+  return (String(nombres||"").trim() + " " + String(apellidos||"").trim()).replace(/\s+/g, " ").trim();
+}
 function fmtDate(str){
   if(!str) return "—";
   var d = new Date(str + "T00:00:00");
@@ -350,6 +353,8 @@ function empleadoToRow(e){
     id: e.id,
     empresa: e.empresa || null,
     nombre: e.nombre || "",
+    nombres: e.nombres || null,
+    apellidos: e.apellidos || null,
     puesto: e.puesto || null,
     area: e.area || null,
     status: (e.status === "Baja") ? "baja" : "activo",
@@ -377,6 +382,7 @@ function empleadoToRow(e){
     contrato_texto: e.contratoTexto || null,
     id_contrato: e.id_contrato || null,
     tipo_contrato: e.tipo_contrato || null,
+    vigencia_credencial: e.vigencia_credencial || null,
     documentos: e.documentos || {},
     sspc: e.sspc || { alta:"", documentos:[] },
     vales: e.vales || [],
@@ -388,6 +394,8 @@ function rowToEmpleado(row){
     id: row.id,
     empresa: row.empresa || "",
     nombre: row.nombre || "",
+    nombres: row.nombres || "",
+    apellidos: row.apellidos || "",
     puesto: row.puesto || "",
     area: row.area || "",
     status: (row.status === "baja") ? "Baja" : "Activo",
@@ -415,6 +423,7 @@ function rowToEmpleado(row){
     contratoTexto: row.contrato_texto || "",
     id_contrato: row.id_contrato || "",
     tipo_contrato: row.tipo_contrato || "",
+    vigencia_credencial: row.vigencia_credencial || "",
     documentos: (row.documentos && Object.keys(row.documentos).length) ? row.documentos : blankDocs(),
     sspc: row.sspc || { alta:"", documentos:[] },
     vales: row.vales || [],
@@ -919,32 +928,39 @@ function renderPanelView(el){
   if(stockBajo.length === 0){ html += '<div class="empty-msg">Sin artículos con stock bajo.</div>'; }
   else{
     for(i=0;i<stockBajo.length;i++){
-      var sb = stockBajo[i];
-      html += '<div class="list-row"><span>'+esc(sb.nombre)+(sb.talla && !ignoraTalla(sb.categoria) ? (' &middot; Talla '+esc(sb.talla)) : '')+'</span><span class="pill pill-warn">'+sb.cantidad+' pieza(s)</span></div>';
+      var sbItem = stockBajo[i];
+      html += '<div class="list-row"><span>'+esc(sbItem.nombre)+(sbItem.talla && !ignoraTalla(sbItem.categoria) ? (' &middot; Talla '+esc(sbItem.talla)) : '')+'</span><span class="pill pill-warn">'+sbItem.cantidad+' pieza(s)</span></div>';
     }
   }
   html += '</div>';
 
-  html += '<div class="panel-box" style="margin-top:20px;"><h3>Respaldo de datos</h3>';
-  html += '<div class="note-box">Descarga un archivo con toda la información del sistema (empleados, machotes, inventario, calendario) como respaldo propio. Puedes usarlo después para restaurar todo si hace falta.</div>';
-  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">';
-  html += '<button class="btn secondary" data-action="exportar-respaldo">Exportar respaldo</button>';
-  html += '<label class="btn secondary mut-accion" style="margin:0;">Importar respaldo<input type="file" id="importarRespaldoFile" accept=".json" style="display:none;"></label>';
-  html += '</div>';
-  html += '<div id="respaldoStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>';
-  html += '</div>';
+  if(!isConsulta()){
+    html += '<div class="panel-box" style="margin-top:20px;"><h3>Respaldo de datos</h3>';
+    html += '<div class="note-box">Descarga un archivo con toda la información del sistema (empleados, machotes, inventario, calendario) como respaldo propio. Puedes usarlo después para restaurar todo si hace falta.</div>';
+    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">';
+    html += '<button class="btn secondary" data-action="exportar-respaldo">Exportar respaldo</button>';
+    html += '<label class="btn secondary mut-accion" style="margin:0;">Importar respaldo<input type="file" id="importarRespaldoFile" accept=".json" style="display:none;"></label>';
+    html += '</div>';
+    html += '<div id="respaldoStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>';
+    html += '</div>';
+  }
 
   el.innerHTML = html;
   var rows = el.querySelectorAll("[data-goto-ficha]");
   for(i=0;i<rows.length;i++){
     rows[i].addEventListener("click", function(){ switchView("ficha", this.getAttribute("data-goto-ficha")); });
   }
-  el.querySelector('[data-action="exportar-respaldo"]').addEventListener("click", function(){
+  var btnExportar = el.querySelector('[data-action="exportar-respaldo"]');
+  if(btnExportar){
+  btnExportar.addEventListener("click", function(){
     exportarRespaldo();
     byId("respaldoStatus").style.color = "#2e9e4c";
     byId("respaldoStatus").textContent = "Respaldo descargado.";
   });
-  byId("importarRespaldoFile").addEventListener("change", function(ev){
+  }
+  var inputRespaldo = byId("importarRespaldoFile");
+  if(inputRespaldo){
+  inputRespaldo.addEventListener("change", function(ev){
     var file = ev.target.files[0];
     if(!file) return;
     if(!window.confirm("Esto reemplazará todos los datos actuales del sistema con los del respaldo. ¿Deseas continuar?")) return;
@@ -960,6 +976,7 @@ function renderPanelView(el){
       }
     });
   });
+  }
   ocultarSiConsulta(el);
 }
 
@@ -1120,7 +1137,8 @@ function efField(name, label, type, value){
 function fichaEditFormHTML(e){
   var html = '<div class="form-box" style="margin-bottom:22px;"><h3>Editar datos del empleado</h3>';
   html += '<div class="form-grid">';
-  html += efField("nombre", "Nombre", "text", e.nombre);
+  html += efField("nombres", "Nombre(s)", "text", e.nombres);
+  html += efField("apellidos", "Apellidos", "text", e.apellidos);
   html += efField("puesto", "Puesto", "text", e.puesto);
   html += efField("area", "Área / Servicio", "text", e.area);
   html += '<div class="form-field"><label>Estatus</label><select id="ef_status">';
@@ -1157,7 +1175,9 @@ function wireFichaEditForm(e, el){
     byId("ef_motivoBajaWrap").style.display = esBaja ? "" : "none";
   });
   el.querySelector('[data-action="guardar-ficha"]').addEventListener("click", function(){
-    e.nombre = val("ef_nombre");
+    e.nombres = val("ef_nombres");
+    e.apellidos = val("ef_apellidos");
+    e.nombre = nombreCompleto(e.nombres, e.apellidos);
     e.puesto = val("ef_puesto");
     e.area = val("ef_area");
     e.status = val("ef_status");
@@ -1277,7 +1297,7 @@ function asignarFolio(e){
 function newAltaDraft(){
   return {
     id: uid(),
-    empresa:"", nombre:"", puesto:"", area:"", status:"Activo",
+    empresa:"", nombre:"", nombres:"", apellidos:"", puesto:"", area:"", status:"Activo",
     fecha_ingreso:"", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
     calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México",
     salario_mensual:"", salario_diario:"", foto:"", documentos:blankDocs(), sspc:{ alta:"", documentos:[] }, vales:[]
@@ -1286,11 +1306,12 @@ function newAltaDraft(){
 function captureStep1(){
   var d = state.altaDraft;
   if(!d) return;
-  var map = ["nombre","puesto","area","status","fecha_ingreso","fecha_nacimiento","curp","rfc","nss","nacionalidad","estado_civil","calle","no_exterior","colonia","cp","estado","pais","salario_mensual","salario_diario"];
+  var map = ["nombres","apellidos","puesto","area","status","fecha_ingreso","fecha_nacimiento","curp","rfc","nss","nacionalidad","estado_civil","calle","no_exterior","colonia","cp","estado","pais","salario_mensual","salario_diario"];
   for(var i=0;i<map.length;i++){
     var elx = byId("alta_" + map[i]);
     if(elx) d[map[i]] = elx.value;
   }
+  d.nombre = nombreCompleto(d.nombres, d.apellidos);
 }
 function renderAltaView(el){
   var html = '<h1 class="view-title">Dar de alta</h1>';
@@ -1323,7 +1344,8 @@ function altaStep1HTML(){
   html += '<div class="empresa-opt '+(d.empresa==="SPG"?"sel-spg":"")+'" data-empresa="SPG">SPG</div>';
   html += '</div>';
   html += '<div class="form-grid">';
-  html += formField("nombre", "Nombre completo", "text", d.nombre);
+  html += formField("nombres", "Nombre(s)", "text", d.nombres);
+  html += formField("apellidos", "Apellidos", "text", d.apellidos);
   html += formField("puesto", "Puesto", "text", d.puesto);
   html += formField("area", "Área", "text", d.area);
   html += formSelect("status", "Status", ["Activo","Baja"], d.status);
@@ -1556,13 +1578,20 @@ function buildCredFrenteHTML(e){
   html += '</div></div>';
   return html;
 }
+function vigenciaCredencialTexto(e){
+  if(e.vigencia_credencial){
+    var vd = new Date(e.vigencia_credencial + "T00:00:00");
+    if(!isNaN(vd.getTime())){ return MESES_ES[vd.getMonth()].toUpperCase() + " " + vd.getFullYear(); }
+  }
+  var vigYear = e.fecha_ingreso ? (new Date(e.fecha_ingreso + "T00:00:00").getFullYear() + 2) : (new Date().getFullYear() + 2);
+  return "DICIEMBRE " + vigYear;
+}
 function buildCredReversoHTML(e){
   var emp = EMPRESAS[e.empresa];
-  var vigYear = e.fecha_ingreso ? (new Date(e.fecha_ingreso + "T00:00:00").getFullYear() + 2) : (new Date().getFullYear() + 2);
   var html = '<div class="cred-card">';
   html += '<svg class="cred-bg" viewBox="0 0 270 415" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="270" height="415" fill="#ffffff"/></svg>';
   html += '<div class="cred-content">';
-  html += '<div class="cred-back-top" style="background:'+emp.color+';">FOLIO: '+esc(e.folio || "Sin generar")+'<br>VIGENCIA: DICIEMBRE '+vigYear+'</div>';
+  html += '<div class="cred-back-top" style="background:'+emp.color+';">FOLIO: '+esc(e.folio || "Sin generar")+'<br>VIGENCIA: '+esc(vigenciaCredencialTexto(e))+'</div>';
   html += '<div class="cred-back-mid">';
   html += '<div class="cred-sigline"></div>';
   html += '<div class="cred-coord">'+esc(COORD_TITULO)+'</div>';
@@ -1579,11 +1608,22 @@ function renderCredencialView(el, id){
   if(!e.folio) asignarFolio(e);
   var html = '<a class="back-link" data-nav="ficha">&larr; Volver a la ficha</a>';
   html += '<h1 class="view-title">Credencial &middot; '+esc(e.nombre)+'</h1>';
-  html += '<div class="credencial-row">' + buildCredFrenteHTML(e) + buildCredReversoHTML(e) + '</div>';
+  html += '<div class="form-field mut-accion" style="max-width:220px;margin-bottom:16px;"><label>Vigencia de la credencial</label><input type="date" id="credVigenciaInput" value="'+esc(e.vigencia_credencial || "")+'"></div>';
+  html += '<div id="credencialCards" class="credencial-row">' + buildCredFrenteHTML(e) + buildCredReversoHTML(e) + '</div>';
   html += '<button class="btn" data-action="imprimir">Imprimir credencial</button>';
   el.innerHTML = html;
   el.querySelector('[data-nav="ficha"]').addEventListener("click", function(){ switchView("ficha", e.id); });
   el.querySelector('[data-action="imprimir"]').addEventListener("click", function(){ imprimirCredencial(e); });
+  var vigInput = byId("credVigenciaInput");
+  if(vigInput){
+    vigInput.addEventListener("change", function(){
+      e.vigencia_credencial = this.value;
+      saveState();
+      syncEmployee(e);
+      byId("credencialCards").innerHTML = buildCredFrenteHTML(e) + buildCredReversoHTML(e);
+    });
+  }
+  ocultarSiConsulta(el);
 }
 function imprimirCredencial(e){
   var body = '<div style="display:flex;gap:24px;padding:24px;font-family:Segoe UI,Arial,sans-serif;">' +
@@ -1662,7 +1702,7 @@ function buildContractVars(e, fechaContrato, tipo){
     terminoPrueba.setDate(terminoPrueba.getDate() + 30);
   }
   return {
-    nombre: e.nombre, curp: e.curp, rfc: e.rfc, nss: e.nss, puesto: e.puesto, area: e.area,
+    nombre: e.nombre, nombres: e.nombres || "", apellidos: e.apellidos || "", curp: e.curp, rfc: e.rfc, nss: e.nss, puesto: e.puesto, area: e.area,
     contrato: tipo || "INDETERMINADO",
     fecha_ingreso: fmtDate(e.fecha_ingreso), fecha_contrato: fmtDate(fc), fecha_nacimiento: fmtDate(e.fecha_nacimiento),
     fecha_termino_prueba: fmtDate(terminoPrueba.toISOString().slice(0,10)),
@@ -1765,7 +1805,7 @@ function renderMachotesView(el){
   html += machoteBoxHTML("SPG", "spg");
   html += '</div>';
   html += '<div class="vars-legend"><strong>Variables disponibles:</strong><br>';
-  var vars = ["nombre","curp","rfc","nss","puesto","area","contrato","fecha_ingreso","fecha_contrato","fecha_termino_prueba","fecha_nacimiento","edad","nacionalidad","estado_civil","calle","no_exterior","colonia","cp","estado","pais","salario_mensual","salario_diario","salario_mensual_letra","salario_diario_letra","dia","mes","mes_num","anio","id_contrato","empresa_nombre","empresa_rfc","empresa_imss","empresa_stps","empresa_escritura","empresa_direccion","representante"];
+  var vars = ["nombre","nombres","apellidos","curp","rfc","nss","puesto","area","contrato","fecha_ingreso","fecha_contrato","fecha_termino_prueba","fecha_nacimiento","edad","nacionalidad","estado_civil","calle","no_exterior","colonia","cp","estado","pais","salario_mensual","salario_diario","salario_mensual_letra","salario_diario_letra","dia","mes","mes_num","anio","id_contrato","empresa_nombre","empresa_rfc","empresa_imss","empresa_stps","empresa_escritura","empresa_direccion","representante"];
   for(var i=0;i<vars.length;i++){ html += '<code>{{'+vars[i]+'}}</code>'; }
   html += '</div>';
   el.innerHTML = html;
@@ -1820,19 +1860,19 @@ function wireMachoteBox(empresa){
 
 /* ================= INVENTARIO ================= */
 var CAT_UNIFORME = [
-  { slug:"pantalon_negro", nombre:"PANTALÓN COMANDO NEGRO", tallaFija:null },
-  { slug:"pantalon_gris", nombre:"PANTALÓN COMANDO GRIS C/SINTILLO", tallaFija:null },
+  { slug:"pantalon_negro", nombre:"PANTALÓN COMANDO NEGRO", tallaFija:null, sinBordado:true },
+  { slug:"pantalon_gris", nombre:"PANTALÓN COMANDO GRIS C/SINTILLO", tallaFija:null, sinBordado:true },
   { slug:"playera_polo_gris", nombre:"PLAYERA TIPO POLO GRIS", tallaFija:null },
   { slug:"playera_ml_roja", nombre:"PLAYERA MANGA LARGA COLOR ROJO CON LOGOS", tallaFija:null },
   { slug:"camisola_blanca", nombre:"CAMISOLA BLANCA", tallaFija:null },
   { slug:"chamarra_rompevientos", nombre:"CHAMARRA ROMPEVIENTOS NEGRA", tallaFija:null },
   { slug:"chamarra_desmontable", nombre:"CHAMARRA DESMONTABLE NEGRA", tallaFija:null },
-  { slug:"chaleco_gris", nombre:"CHALECO NEGRO CON GRIS", tallaFija:"ÚNICA" },
-  { slug:"chaleco_tactico", nombre:"CHALECO NEGRO TÁCTICO", tallaFija:"ÚNICA" },
+  { slug:"chaleco_gris", nombre:"CHALECO NEGRO CON GRIS", tallaFija:null },
+  { slug:"chaleco_tactico", nombre:"CHALECO NEGRO TÁCTICO", tallaFija:null },
   { slug:"gorra_negra", nombre:"GORRA NEGRA", tallaFija:"ÚNICA" },
-  { slug:"gorra_roja", nombre:"GORRA ROJA CON LOGO", tallaFija:null },
-  { slug:"corbata", nombre:"CORBATA NEGRA", tallaFija:"ÚNICA" },
-  { slug:"bota_tactica", nombre:"BOTA TÁCTICA NEGRA", tallaFija:null }
+  { slug:"gorra_roja", nombre:"GORRA ROJA CON LOGO", tallaFija:"ÚNICA" },
+  { slug:"corbata", nombre:"CORBATA NEGRA", tallaFija:"ÚNICA", sinBordado:true },
+  { slug:"bota_tactica", nombre:"BOTA TÁCTICA NEGRA", tallaFija:null, sinBordado:true }
 ];
 var CAT_COMPLEMENTOS = [
   { slug:"fornitura", nombre:"FORNITURA" },
@@ -2332,7 +2372,7 @@ function valeItemsUniformeHTML(){
     }
     html += '<input type="number" min="1" placeholder="Cant." style="width:70px;" data-vale-cant="'+it.slug+'">';
     html += '<select data-vale-estado="'+it.slug+'"><option value="NUEVO">Nuevo</option><option value="USADO">Usado</option></select>';
-    html += '<input type="text" placeholder="Bordado (opcional)" maxlength="22" style="width:140px;" data-vale-bord="'+it.slug+'">';
+    if(!it.sinBordado){ html += '<input type="text" placeholder="Bordado (opcional)" maxlength="22" style="width:140px;" data-vale-bord="'+it.slug+'">'; }
     html += '<span style="font-size:11.5px;color:#999;" data-vale-disp="'+it.slug+'"></span>';
     html += '</div></div>';
   }
