@@ -277,7 +277,8 @@ var state = {
   altaStep: 1,
   altaDraft: null,
   calYear: null,
-  calMonth: null
+  calMonth: null,
+  autoAnioSeleccionado: null
 };
 
 /* ================= UTILIDADES ================= */
@@ -495,7 +496,7 @@ function cargarListasDesdeSupabase(){
   });
   var p4 = sb.from("autos").select("*").then(function(res){
     if(res.error){ console.warn("No se pudieron cargar los autos:", res.error.message); return; }
-    state.autos = (res.data || []).map(function(r){ return { id:r.id, placas:r.placas || "", marca_modelo:r.marca_modelo || "", asignadoA:r.asignado_a || "" }; });
+    state.autos = (res.data || []).map(function(r){ return { id:r.id, placas:r.placas || "", marca_modelo:r.marca_modelo || "", asignadoA:r.asignado_a || "", documentosPorAnio: r.documentos_por_anio || {} }; });
   });
   return Promise.all([p1,p2,p3,p4]);
 }
@@ -600,7 +601,7 @@ function importarRespaldo(file, cb){
       for(var v=0;v<state.vacaciones.length;v++){ var vv=state.vacaciones[v]; dbUpsert("vacaciones", { id:vv.id, empleado_id:vv.empleadoId, fecha_inicio:vv.inicio, fecha_fin:vv.fin }); }
       for(var n=0;n<state.incapacidades.length;n++){ var ii=state.incapacidades[n]; dbUpsert("incapacidades", { id:ii.id, empleado_id:ii.empleadoId, fecha_inicio:ii.inicio, fecha_fin:ii.fin, motivo:ii.motivo||"" }); }
       for(var q=0;q<state.uniformeInventario.length;q++){ dbUpsert("inventario_items", state.uniformeInventario[q]); }
-      for(var a=0;a<state.autos.length;a++){ var aa=state.autos[a]; dbUpsert("autos", { id:aa.id, placas:aa.placas, marca_modelo:aa.marca_modelo, asignado_a:aa.asignadoA||null }); }
+      for(var a=0;a<state.autos.length;a++){ dbUpsert("autos", autoToRow(state.autos[a])); }
       if(cb) cb(true, null);
     }catch(err){
       if(cb) cb(false, err.message);
@@ -634,6 +635,13 @@ function demoEmployees(){
 function findEmployee(id){
   for(var i=0;i<state.employees.length;i++){ if(state.employees[i].id === id) return state.employees[i]; }
   return null;
+}
+function findAuto(id){
+  for(var i=0;i<state.autos.length;i++){ if(state.autos[i].id === id) return state.autos[i]; }
+  return null;
+}
+function autoToRow(a){
+  return { id: a.id, placas: a.placas, marca_modelo: a.marca_modelo, asignado_a: a.asignadoA || null, documentos_por_anio: a.documentosPorAnio || {} };
 }
 
 /* ================= LOGIN Y PERFILES ================= */
@@ -821,6 +829,7 @@ function renderMain(){
   if(state.view === "calendario") return renderCalendarioView(el);
   if(state.view === "machotes") return renderMachotesView(el);
   if(state.view === "usuarios") return renderUsuariosView(el);
+  if(state.view === "autoficha") return renderAutoFichaView(el, state.viewParam);
   if(state.view === "credencial") return renderCredencialView(el, state.viewParam);
   if(state.view === "contrato") return renderContratoView(el, state.viewParam);
   if(state.view === "uniformes") return renderUniformesView(el);
@@ -953,6 +962,17 @@ function renderPanelView(el){
   }
   html += '</div>';
 
+  html += '<div class="panel-box"><h3>Vencimientos de autos (30 días)</h3>';
+  var vencAutos = autosVencimientosProximos();
+  if(vencAutos.length === 0){ html += '<div class="empty-msg">Sin vencimientos próximos de póliza o licencia.</div>'; }
+  else{
+    for(i=0;i<vencAutos.length;i++){
+      var va = vencAutos[i];
+      html += '<div class="list-row" style="cursor:pointer;" data-goto-auto="'+va.auto.id+'"><span>'+esc(va.auto.placas)+' &middot; '+esc(va.doc)+' ('+va.anio+')</span><span class="pill '+(va.dias<=0?"pill-warn":"")+'">'+(va.dias<=0?"vencida":("en "+va.dias+" día(s)"))+'</span></div>';
+    }
+  }
+  html += '</div>';
+
   if(!isConsulta()){
     html += '<div class="panel-box" style="margin-top:20px;"><h3>Respaldo de datos</h3>';
     html += '<div class="note-box">Descarga un archivo con toda la información del sistema (empleados, machotes, inventario, calendario) como respaldo propio. Puedes usarlo después para restaurar todo si hace falta.</div>';
@@ -968,6 +988,10 @@ function renderPanelView(el){
   var rows = el.querySelectorAll("[data-goto-ficha]");
   for(i=0;i<rows.length;i++){
     rows[i].addEventListener("click", function(){ switchView("ficha", this.getAttribute("data-goto-ficha")); });
+  }
+  var rowsAuto = el.querySelectorAll("[data-goto-auto]");
+  for(i=0;i<rowsAuto.length;i++){
+    rowsAuto[i].addEventListener("click", function(){ switchView("autoficha", this.getAttribute("data-goto-auto")); });
   }
   var btnExportar = el.querySelector('[data-action="exportar-respaldo"]');
   if(btnExportar){
@@ -2356,10 +2380,10 @@ function renderInvAutosTab(el){
     var placas = val("autoPlacas").trim().toUpperCase();
     var marca = val("autoMarcaModelo").trim();
     if(!placas || !marca){ alert("Indica placas y marca/modelo."); return; }
-    var nuevoAuto = { id: uid(), placas: placas, marca_modelo: marca, asignadoA: "" };
+    var nuevoAuto = { id: uid(), placas: placas, marca_modelo: marca, asignadoA: "", documentosPorAnio: {} };
     state.autos.push(nuevoAuto);
     saveState();
-    dbUpsert("autos", { id: nuevoAuto.id, placas: nuevoAuto.placas, marca_modelo: nuevoAuto.marca_modelo, asignado_a: null });
+    dbUpsert("autos", autoToRow(nuevoAuto));
     renderInvAutosTab(el);
   });
   wireAutosLista(el);
@@ -2379,14 +2403,19 @@ function autosTablaHTML(){
       html += '<option value="' + emp.id + '" ' + (a.asignadoA === emp.id ? "selected" : "") + '>' + esc(emp.nombre) + '</option>';
     }
     html += '</select>';
+    html += '<button class="btn small secondary" data-auto-docs="' + a.id + '">Documentos</button>';
     html += '<button class="btn small secondary mut-accion" data-auto-del="' + a.id + '">Eliminar</button>';
     html += '</div></div>';
   }
   return html;
 }
 function wireAutosLista(el){
-  var sels = el.querySelectorAll("[data-auto-asignar]");
+  var docsBtns = el.querySelectorAll("[data-auto-docs]");
   var i;
+  for(i=0;i<docsBtns.length;i++){
+    docsBtns[i].addEventListener("click", function(){ switchView("autoficha", this.getAttribute("data-auto-docs")); });
+  }
+  var sels = el.querySelectorAll("[data-auto-asignar]");
   for(i=0;i<sels.length;i++){
     sels[i].addEventListener("change", function(){
       var id = this.getAttribute("data-auto-asignar");
@@ -2396,7 +2425,7 @@ function wireAutosLista(el){
         if(state.autos[j].id === id){ state.autos[j].asignadoA = empId; autoEditado = state.autos[j]; break; }
       }
       saveState();
-      if(autoEditado) dbUpsert("autos", { id: autoEditado.id, placas: autoEditado.placas, marca_modelo: autoEditado.marca_modelo, asignado_a: empId || null });
+      if(autoEditado) dbUpsert("autos", autoToRow(autoEditado));
       renderInvAutosTab(el);
     });
   }
@@ -2408,6 +2437,257 @@ function wireAutosLista(el){
       saveState();
       dbDelete("autos", id);
       renderInvAutosTab(el);
+    });
+  }
+}
+
+/* ================= FICHA DE AUTO (documentos por año) ================= */
+var AUTO_DOCS_FIJOS = [
+  "Contrato de arrendamiento",
+  "Factura 1", "Factura 2", "Factura 3",
+  "Póliza anual",
+  "Tenencia 1", "Tenencia 2",
+  "Verificación 1", "Verificación 2",
+  "Factura de mantenimiento 1", "Factura de mantenimiento 2", "Factura de mantenimiento 3", "Factura de mantenimiento 4",
+  "Tarjeta de circulación",
+  "Licencia de conducir"
+];
+var AUTO_DOCS_CON_VENCIMIENTO = ["Póliza anual", "Licencia de conducir"];
+function anioActualAuto(){ return new Date().getFullYear(); }
+function autoAnioData(a, anio){
+  if(!a.documentosPorAnio) a.documentosPorAnio = {};
+  if(!a.documentosPorAnio[anio]){ a.documentosPorAnio[anio] = { docs:{}, fotos:[] }; }
+  if(!a.documentosPorAnio[anio].docs) a.documentosPorAnio[anio].docs = {};
+  if(!a.documentosPorAnio[anio].fotos) a.documentosPorAnio[anio].fotos = [];
+  for(var i=0;i<AUTO_DOCS_FIJOS.length;i++){
+    if(!a.documentosPorAnio[anio].docs[AUTO_DOCS_FIJOS[i]]){
+      a.documentosPorAnio[anio].docs[AUTO_DOCS_FIJOS[i]] = { recibido:false, storage_path:"", nombreArchivo:"", vencimiento:"" };
+    }
+  }
+  return a.documentosPorAnio[anio];
+}
+function autosVencimientosProximos(){
+  var resultado = [];
+  for(var i=0;i<state.autos.length;i++){
+    var a = state.autos[i];
+    var porAnio = a.documentosPorAnio || {};
+    for(var anio in porAnio){
+      if(!porAnio.hasOwnProperty(anio)) continue;
+      var docs = porAnio[anio].docs || {};
+      for(var j=0;j<AUTO_DOCS_CON_VENCIMIENTO.length;j++){
+        var nombre = AUTO_DOCS_CON_VENCIMIENTO[j];
+        var info = docs[nombre];
+        if(info && info.vencimiento){
+          var dias = diasHastaFecha(new Date(info.vencimiento + "T00:00:00"));
+          if(dias !== null && dias <= 30){
+            resultado.push({ auto:a, doc:nombre, anio:anio, dias:dias, vencimiento:info.vencimiento });
+          }
+        }
+      }
+    }
+  }
+  resultado.sort(function(x,y){ return x.dias - y.dias; });
+  return resultado;
+}
+function renderAutoFichaView(el, id){
+  var a = findAuto(id);
+  if(!a){ el.innerHTML = '<div class="empty-msg">Auto no encontrado.</div>'; return; }
+  if(!state.autoAnioSeleccionado) state.autoAnioSeleccionado = anioActualAuto();
+  var anio = state.autoAnioSeleccionado;
+  autoAnioData(a, anio);
+
+  var aniosDisponibles = Object.keys(a.documentosPorAnio || {}).map(Number);
+  if(aniosDisponibles.indexOf(anioActualAuto()) === -1) aniosDisponibles.push(anioActualAuto());
+  aniosDisponibles.sort(function(x,y){ return y-x; });
+
+  var html = '<a class="back-link" data-nav="uniformes-autos">&larr; Volver a Autos</a>';
+  html += '<h1 class="view-title">' + esc(a.placas) + ' &middot; ' + esc(a.marca_modelo) + '</h1>';
+
+  html += '<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">';
+  html += '<div class="form-field" style="max-width:160px;margin:0;"><label>Año</label><select id="autoAnioSelect">';
+  for(var i=0;i<aniosDisponibles.length;i++){
+    html += '<option value="'+aniosDisponibles[i]+'" '+(aniosDisponibles[i]===anio?"selected":"")+'>'+aniosDisponibles[i]+'</option>';
+  }
+  html += '</select></div>';
+  html += '<div class="form-field" style="max-width:140px;margin:0;"><label>Agregar año anterior</label><input type="number" id="autoAnioNuevo" placeholder="Ej. 2025"></div>';
+  html += '<button class="btn small secondary mut-accion" data-action="auto-anio-agregar">Agregar</button>';
+  html += '</div>';
+
+  html += '<h3>Documentos ' + anio + '</h3>';
+  html += '<div class="note-box">Solo subir el archivo valida el documento (queda en verde). Si necesitas reemplazarlo usa "Actualizar documento".</div>';
+  html += '<div id="autoDocsContainer">' + autoDocsListaHTML(a, anio) + '</div>';
+
+  html += '<h3 style="margin-top:22px;">Fotos del vehículo (máx. 10)</h3>';
+  html += '<div id="autoFotosContainer">' + autoFotosHTML(a, anio) + '</div>';
+
+  el.innerHTML = html;
+  el.querySelector('[data-nav="uniformes-autos"]').addEventListener("click", function(){
+    state.invSubTab = "autos";
+    switchView("uniformes");
+  });
+  byId("autoAnioSelect").addEventListener("change", function(){
+    state.autoAnioSeleccionado = parseInt(this.value, 10);
+    renderAutoFichaView(el, id);
+  });
+  el.querySelector('[data-action="auto-anio-agregar"]').addEventListener("click", function(){
+    var nuevoAnio = parseInt(val("autoAnioNuevo"), 10);
+    if(!nuevoAnio || nuevoAnio < 2000 || nuevoAnio > 2100){ alert("Indica un año válido."); return; }
+    autoAnioData(a, nuevoAnio);
+    saveState();
+    dbUpsert("autos", autoToRow(a));
+    state.autoAnioSeleccionado = nuevoAnio;
+    renderAutoFichaView(el, id);
+  });
+  wireAutoDocs(a, anio, el);
+  wireAutoFotos(a, anio, el);
+  ocultarSiConsulta(el);
+}
+function autoDocsListaHTML(a, anio){
+  var anioData = autoAnioData(a, anio);
+  var html = "";
+  for(var i=0;i<AUTO_DOCS_FIJOS.length;i++){
+    var name = AUTO_DOCS_FIJOS[i];
+    var info = anioData.docs[name];
+    var tieneVenc = AUTO_DOCS_CON_VENCIMIENTO.indexOf(name) !== -1;
+    html += '<div class="doc-row" data-doc="'+esc(name)+'">';
+    html += '<div class="doc-name">'+esc(name)+'</div>';
+    html += '<div class="doc-controls">';
+    if(info.recibido){
+      html += '<span class="doc-status-tag tag-recibido">Recibido'+(info.nombreArchivo ? (" &middot; " + esc(info.nombreArchivo)) : "")+'</span>';
+      if(info.storage_path){ html += '<button class="btn small secondary" data-autodoc-ver="'+esc(name)+'">Ver / Descargar</button>'; }
+      html += '<button class="btn small secondary mut-accion" data-autodoc-actualizar="'+esc(name)+'">Actualizar documento</button>';
+      html += '<input type="file" style="display:none;" data-autodoc-file="'+esc(name)+'">';
+    } else {
+      html += '<input type="file" class="mut-accion" data-autodoc-file="'+esc(name)+'">';
+      html += '<span class="doc-status-tag tag-pendiente">Pendiente</span>';
+    }
+    if(tieneVenc){
+      html += '<span style="font-size:12.5px;color:#666;margin-left:8px;">Vence:</span> <input type="date" class="mut-accion" style="width:150px;" data-autodoc-vence="'+esc(name)+'" value="'+esc(info.vencimiento||"")+'">';
+    }
+    html += '</div>';
+    html += '<div class="doc-upload-status" data-autodoc-status="'+esc(name)+'" style="font-size:12px;color:#888;margin-top:4px;"></div>';
+    html += '</div>';
+  }
+  return html;
+}
+function wireAutoDocs(a, anio, el){
+  var cont = byId("autoDocsContainer");
+  if(!cont) return;
+  var anioData = autoAnioData(a, anio);
+  var fileInputs = cont.querySelectorAll("[data-autodoc-file]");
+  var i;
+  for(i=0;i<fileInputs.length;i++){
+    fileInputs[i].addEventListener("change", function(ev){
+      var docName = this.getAttribute("data-autodoc-file");
+      var file = ev.target.files[0];
+      if(!file) return;
+      var estadoEl = cont.querySelector('[data-autodoc-status="'+cssEscape(docName)+'"]');
+      if(estadoEl) estadoEl.textContent = "Subiendo...";
+      var path = "autos/" + a.id + "/" + anio + "/" + Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9._-]+/g, "_");
+      sb.storage.from("documentos").upload(path, file, { upsert:true }).then(function(res){
+        if(res.error){ if(estadoEl) estadoEl.textContent = "Error al subir: " + res.error.message; return; }
+        anioData.docs[docName].recibido = true;
+        anioData.docs[docName].storage_path = path;
+        anioData.docs[docName].nombreArchivo = file.name;
+        saveState();
+        dbUpsert("autos", autoToRow(a));
+        cont.innerHTML = autoDocsListaHTML(a, anio);
+        wireAutoDocs(a, anio, el);
+      });
+    });
+  }
+  var verBtns = cont.querySelectorAll("[data-autodoc-ver]");
+  for(i=0;i<verBtns.length;i++){
+    verBtns[i].addEventListener("click", function(){
+      var docName = this.getAttribute("data-autodoc-ver");
+      var info = anioData.docs[docName];
+      if(info && info.storage_path){ abrirDocumentoStorage(info.storage_path, false, info.nombreArchivo); }
+    });
+  }
+  var actBtns = cont.querySelectorAll("[data-autodoc-actualizar]");
+  for(i=0;i<actBtns.length;i++){
+    actBtns[i].addEventListener("click", function(){
+      var docName = this.getAttribute("data-autodoc-actualizar");
+      var input = cont.querySelector('[data-autodoc-file="'+cssEscape(docName)+'"]');
+      if(input) input.click();
+    });
+  }
+  var vencInputs = cont.querySelectorAll("[data-autodoc-vence]");
+  for(i=0;i<vencInputs.length;i++){
+    vencInputs[i].addEventListener("change", function(){
+      var docName = this.getAttribute("data-autodoc-vence");
+      anioData.docs[docName].vencimiento = this.value;
+      saveState();
+      dbUpsert("autos", autoToRow(a));
+    });
+  }
+}
+function autoFotosHTML(a, anio){
+  var anioData = autoAnioData(a, anio);
+  var fotos = anioData.fotos || [];
+  var html = '<div style="display:flex;flex-wrap:wrap;gap:12px;">';
+  for(var i=0;i<fotos.length;i++){
+    html += '<div style="width:110px;text-align:center;">';
+    html += '<div class="auto-foto-thumb" data-foto-thumb="'+i+'" style="width:110px;height:90px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#999;font-size:11px;overflow:hidden;">Cargando...</div>';
+    html += '<button class="btn small secondary mut-accion" data-foto-quitar="'+i+'" style="margin-top:6px;font-size:11px;padding:3px 8px;">Quitar</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+  if(fotos.length < 10){
+    html += '<div style="margin-top:12px;"><input type="file" accept="image/*" class="mut-accion" id="autoFotoNueva"></div>';
+  } else {
+    html += '<div class="note-box" style="margin-top:12px;">Ya tienes 10 fotos (máximo). Quita alguna para subir otra.</div>';
+  }
+  html += '<div id="autoFotoStatus" style="font-size:12px;color:#888;margin-top:6px;"></div>';
+  return html;
+}
+function wireAutoFotos(a, anio, el){
+  var cont = byId("autoFotosContainer");
+  if(!cont) return;
+  var anioData = autoAnioData(a, anio);
+  var fotos = anioData.fotos || [];
+  var i;
+  for(i=0;i<fotos.length;i++){
+    (function(idx, foto){
+      var thumb = cont.querySelector('[data-foto-thumb="'+idx+'"]');
+      if(thumb && foto.storage_path){
+        sb.storage.from("documentos").createSignedUrl(foto.storage_path, 3600).then(function(res){
+          if(res.error || !res.data) return;
+          thumb.innerHTML = '<img src="'+res.data.signedUrl+'" style="width:100%;height:100%;object-fit:cover;cursor:pointer;" data-foto-abrir="'+idx+'">';
+          var img = thumb.querySelector('[data-foto-abrir]');
+          if(img) img.addEventListener("click", function(){ abrirDocumentoStorage(foto.storage_path, false, foto.nombreArchivo); });
+        });
+      }
+    })(i, fotos[i]);
+  }
+  var quitarBtns = cont.querySelectorAll("[data-foto-quitar]");
+  for(i=0;i<quitarBtns.length;i++){
+    quitarBtns[i].addEventListener("click", function(){
+      var idx = parseInt(this.getAttribute("data-foto-quitar"), 10);
+      anioData.fotos.splice(idx, 1);
+      saveState();
+      dbUpsert("autos", autoToRow(a));
+      cont.innerHTML = autoFotosHTML(a, anio);
+      wireAutoFotos(a, anio, el);
+    });
+  }
+  var nuevaInput = byId("autoFotoNueva");
+  if(nuevaInput){
+    nuevaInput.addEventListener("change", function(ev){
+      var file = ev.target.files[0];
+      if(!file) return;
+      if((anioData.fotos||[]).length >= 10){ alert("Ya tienes 10 fotos, el máximo."); return; }
+      var statusEl = byId("autoFotoStatus");
+      if(statusEl) statusEl.textContent = "Subiendo...";
+      var path = "autos/" + a.id + "/" + anio + "/fotos/" + Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9._-]+/g, "_");
+      sb.storage.from("documentos").upload(path, file, { upsert:true }).then(function(res){
+        if(res.error){ if(statusEl) statusEl.textContent = "Error al subir: " + res.error.message; return; }
+        anioData.fotos.push({ storage_path: path, nombreArchivo: file.name });
+        saveState();
+        dbUpsert("autos", autoToRow(a));
+        cont.innerHTML = autoFotosHTML(a, anio);
+        wireAutoFotos(a, anio, el);
+      });
     });
   }
 }
