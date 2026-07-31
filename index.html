@@ -779,16 +779,14 @@ function renderSidebar(){
     { key:"alta", label:"Dar de alta" },
     { key:"calendario", label:"Calendario" },
     { key:"machotes", label:"Machotes" },
-    { key:"uniformes", label:"Inventario" },
-    { key:"usuarios", label:"Usuarios" }
+    { key:"uniformes", label:"Inventario" }
   ];
   var html = '<div class="sidebar-logo-box">' + logoFullHTML(42) + '</div>';
-  html += '<div id="sidebarAvatarBox" style="display:flex;justify-content:center;margin:0 0 18px;"></div>';
+  html += '<div id="sidebarAvatarBox" style="display:flex;justify-content:center;margin:0 0 18px;'+(isConsulta()?"":"cursor:pointer;")+'" title="'+(isConsulta()?"":"Cambiar foto de usuarios")+'"></div>';
   html += '<nav class="sidebar-nav">';
   for(var i=0;i<items.length;i++){
     var it = items[i];
     if(it.key === "alta" && isConsulta()) continue;
-    if(it.key === "usuarios" && isConsulta()) continue;
     var activeClass = (state.view === it.key || (it.key==="empleados" && state.view==="ficha") || (it.key==="alta" && (state.view==="credencial"||state.view==="contrato")) || (it.key==="uniformes" && state.view==="vale")) ? " active" : "";
     html += '<button class="'+ (activeClass ? "active" : "") +'" data-nav="'+it.key+'">' + it.label + '</button>';
   }
@@ -801,6 +799,10 @@ function renderSidebar(){
   }
   var outBtn = byId("btnCerrarSesion");
   if(outBtn) outBtn.addEventListener("click", cerrarSesion);
+  var avatarBox = byId("sidebarAvatarBox");
+  if(avatarBox && !isConsulta()){
+    avatarBox.addEventListener("click", function(){ switchView("usuarios"); });
+  }
   cargarAvatarSidebar();
 }
 function cargarAvatarSidebar(){
@@ -808,7 +810,7 @@ function cargarAvatarSidebar(){
   if(!box || !sb || !state.currentUserAvatarPath) return;
   sb.storage.from("documentos").createSignedUrl(state.currentUserAvatarPath, 3600).then(function(res){
     if(res.error || !res.data) return;
-    box.innerHTML = '<img src="'+res.data.signedUrl+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #444;">';
+    box.innerHTML = '<img src="'+res.data.signedUrl+'" style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:2px solid #444;">';
   });
 }
 function switchView(name, param){
@@ -1938,10 +1940,12 @@ function wireMachoteBox(empresa){
 
 /* ================= USUARIOS ================= */
 function renderUsuariosView(el){
-  var html = '<h1 class="view-title">Usuarios del sistema</h1>';
+  var html = '<a class="back-link" data-nav="panel">&larr; Volver al Panel</a>';
+  html += '<h1 class="view-title">Usuarios del sistema</h1>';
   html += '<p class="view-sub">Foto de cada cuenta de acceso. El correo, la contraseña y el permiso (Administrador/Consulta) se manejan desde Supabase, como ya lo haces.</p>';
   html += '<div id="usuariosLista"><div class="empty-msg">Cargando...</div></div>';
   el.innerHTML = html;
+  el.querySelector('[data-nav="panel"]').addEventListener("click", function(){ switchView("panel"); });
   if(!sb){ return; }
   sb.from("profiles").select("id,nombre,rol,avatar_path").order("nombre").then(function(res){
     var cont = byId("usuariosLista");
