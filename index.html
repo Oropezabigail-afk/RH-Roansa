@@ -783,6 +783,7 @@ function renderSidebar(){
     { key:"usuarios", label:"Usuarios" }
   ];
   var html = '<div class="sidebar-logo-box">' + logoFullHTML(42) + '</div>';
+  html += '<div id="sidebarAvatarBox" style="display:flex;justify-content:center;margin:0 0 18px;"></div>';
   html += '<nav class="sidebar-nav">';
   for(var i=0;i<items.length;i++){
     var it = items[i];
@@ -792,7 +793,7 @@ function renderSidebar(){
     html += '<button class="'+ (activeClass ? "active" : "") +'" data-nav="'+it.key+'">' + it.label + '</button>';
   }
   html += '</nav>';
-  html += '<div class="sidebar-foot"><div id="sidebarAvatarBox" style="margin-bottom:8px;"></div>ROANSA &amp; SPG<br>' + esc(state.currentUserName || "") + '<br>' + (isConsulta() ? "Perfil: Consulta" : "Perfil: Administrador") + '<br><button id="btnCerrarSesion" style="margin-top:8px;background:transparent;border:1px solid #444;color:#ccc;border-radius:6px;padding:5px 10px;font-size:11px;">Cerrar sesión</button></div>';
+  html += '<div class="sidebar-foot">ROANSA &amp; SPG<br>' + esc(state.currentUserName || "") + '<br>' + (isConsulta() ? "Perfil: Consulta" : "Perfil: Administrador") + '<br><button id="btnCerrarSesion" style="margin-top:8px;background:transparent;border:1px solid #444;color:#ccc;border-radius:6px;padding:5px 10px;font-size:11px;">Cerrar sesión</button></div>';
   byId("sidebar").innerHTML = html;
   var btns = byId("sidebar").querySelectorAll("[data-nav]");
   for(var j=0;j<btns.length;j++){
@@ -2796,20 +2797,28 @@ function wireValeForm(el, e){
     var span = el.querySelector('[data-vale-disp="'+slug+'"]');
     if(!span) return;
     var tallaInput = el.querySelector('[data-vale-talla="'+slug+'"]');
-    var fija = catalogoItem("uniforme", slug);
+    var fija = catalogoItem(categoria, slug);
     var talla = tallaInput ? tallaInput.value.trim().toUpperCase() : ((fija && fija.tallaFija) || "");
-    var disp = inventarioDisponible(categoria, slug, talla);
-    span.textContent = "(" + disp + " disponible" + (disp === 1 ? "" : "s") + ")";
+    var estadoSel = el.querySelector('[data-vale-estado="'+slug+'"]');
+    var estado = estadoSel ? estadoSel.value : "NUEVO";
+    var disp = inventarioDisponible(categoria, slug, talla, estado);
+    span.textContent = "(" + disp + " " + (estado==="USADO"?"usado":"nuevo") + (disp === 1 ? "" : "s") + " disponible" + (disp === 1 ? "" : "s") + ")";
   }
   for(i=0;i<CAT_UNIFORME.length;i++){
     (function(slug){
       actualizarDisp("uniforme", slug);
       var tallaInput = el.querySelector('[data-vale-talla="'+slug+'"]');
       if(tallaInput){ tallaInput.addEventListener("input", function(){ actualizarDisp("uniforme", slug); }); }
+      var estadoInput = el.querySelector('[data-vale-estado="'+slug+'"]');
+      if(estadoInput){ estadoInput.addEventListener("change", function(){ actualizarDisp("uniforme", slug); }); }
     })(CAT_UNIFORME[i].slug);
   }
   for(i=0;i<CAT_COMPLEMENTOS.length;i++){
-    (function(slug){ actualizarDisp("complemento", slug); })(CAT_COMPLEMENTOS[i].slug);
+    (function(slug){
+      actualizarDisp("complemento", slug);
+      var estadoInput = el.querySelector('[data-vale-estado="'+slug+'"]');
+      if(estadoInput){ estadoInput.addEventListener("change", function(){ actualizarDisp("complemento", slug); }); }
+    })(CAT_COMPLEMENTOS[i].slug);
   }
 
   el.querySelector('[data-action="generar-vale"]').addEventListener("click", function(){
