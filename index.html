@@ -2922,12 +2922,21 @@ function fichaValesListaHTML(e){
   for(var i=0;i<lista.length;i++){
     var v = lista[i];
     var resumen = v.items.map(function(it){ return it.nombre + (it.talla ? (" (" + it.talla + ")") : "") + " x" + it.cantidad + (it.estado ? (" [" + it.estado + "]") : ""); }).join(", ");
-    html += '<div class="doc-row"><div class="doc-name" style="min-width:0;">' + esc(v.folio) + ' &middot; ' + fmtDate(v.fecha) + '<br><span style="font-weight:400;font-size:12px;color:#777;">' + esc(resumen) + '</span></div>';
+    html += '<div class="doc-row" data-vale-row="'+esc(v.id)+'"><div class="doc-name" style="min-width:0;">' + esc(v.folio) + ' &middot; ' + fmtDate(v.fecha) + '<br><span style="font-weight:400;font-size:12px;color:#777;">' + esc(resumen) + '</span></div>';
     html += '<div class="doc-controls">';
-    html += '<span class="doc-status-tag ' + (v.adjuntadoExpediente ? "tag-recibido" : "tag-pendiente") + '">' + (v.adjuntadoExpediente ? "Adjunto al expediente" : "No adjuntado") + '</span>';
-    html += '<button class="btn small secondary" data-vale-descargar="' + v.id + '">Descargar de nuevo</button>';
-    html += '<button class="btn small secondary mut-accion" data-vale-adjuntar="' + v.id + '">' + (v.adjuntadoExpediente ? "Quitar del expediente" : "Adjuntar al expediente") + '</button>';
-    html += '</div></div>';
+    html += '<button class="btn small secondary" data-vale-descargar="' + v.id + '">Descargar vale (sin firma)</button>';
+    if(v.firmado_storage_path){
+      html += '<span class="doc-status-tag tag-recibido">Firmado adjunto'+(v.firmado_nombre_archivo ? (" &middot; " + esc(v.firmado_nombre_archivo)) : "")+'</span>';
+      html += '<button class="btn small secondary" data-vale-ver-firmado="' + v.id + '">Ver / Descargar firmado</button>';
+      html += '<button class="btn small secondary mut-accion" data-vale-actualizar-firmado="' + v.id + '">Actualizar firmado</button>';
+      html += '<input type="file" style="display:none;" data-vale-firmado-file="' + v.id + '">';
+    } else {
+      html += '<input type="file" class="mut-accion" data-vale-firmado-file="' + v.id + '">';
+      html += '<span class="doc-status-tag tag-pendiente">Sin firma adjunta</span>';
+    }
+    html += '</div>';
+    html += '<div class="doc-upload-status" data-vale-firmado-status="'+esc(v.id)+'" style="font-size:12px;color:#888;margin-top:4px;"></div>';
+    html += '</div>';
   }
   return html;
 }
@@ -2943,17 +2952,50 @@ function wireValesLista(el, e){
       downloadBlob(base64ToBlob(v.docxBase64), "Vale_Uniforme_" + (e.nombre||"empleado").replace(/[^a-zA-Z0-9]+/g,"_") + "_" + v.folio + ".docx");
     });
   }
-  var adjBtns = el.querySelectorAll("[data-vale-adjuntar]");
-  for(i=0;i<adjBtns.length;i++){
-    adjBtns[i].addEventListener("click", function(){
-      var id = this.getAttribute("data-vale-adjuntar");
-      for(var j=0;j<e.vales.length;j++){
-        if(e.vales[j].id === id){ e.vales[j].adjuntadoExpediente = !e.vales[j].adjuntadoExpediente; break; }
-      }
-      saveState();
-      syncEmployee(e);
-      var lista = byId("valesLista") || byId("fichaValesContainer");
-      if(lista){ lista.innerHTML = fichaValesListaHTML(e); wireValesLista(el, e); }
+  function rerender(){
+    var lista = byId("valesLista") || byId("fichaValesContainer");
+    if(lista){ lista.innerHTML = fichaValesListaHTML(e); wireValesLista(el, e); }
+  }
+  var fileInputs = el.querySelectorAll("[data-vale-firmado-file]");
+  for(i=0;i<fileInputs.length;i++){
+    fileInputs[i].addEventListener("change", function(ev){
+      var valeId = this.getAttribute("data-vale-firmado-file");
+      var file = ev.target.files[0];
+      if(!file) return;
+      var estadoEl = el.querySelector('[data-vale-firmado-status="'+cssEscape(valeId)+'"]');
+      if(estadoEl) estadoEl.textContent = "Subiendo...";
+      var path = "empleados/" + e.id + "/vales/" + valeId + "_" + Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9._-]+/g, "_");
+      sb.storage.from("documentos").upload(path, file, { upsert: true }).then(function(res){
+        if(res.error){ if(estadoEl) estadoEl.textContent = "Error al subir: " + res.error.message; return; }
+        for(var j=0;j<e.vales.length;j++){
+          if(e.vales[j].id === valeId){
+            e.vales[j].firmado_storage_path = path;
+            e.vales[j].firmado_nombre_archivo = file.name;
+            e.vales[j].adjuntadoExpediente = true;
+            break;
+          }
+        }
+        saveState();
+        syncEmployee(e);
+        rerender();
+      });
+    });
+  }
+  var verBtns = el.querySelectorAll("[data-vale-ver-firmado]");
+  for(i=0;i<verBtns.length;i++){
+    verBtns[i].addEventListener("click", function(){
+      var id = this.getAttribute("data-vale-ver-firmado");
+      var v = null;
+      for(var j=0;j<e.vales.length;j++){ if(e.vales[j].id === id){ v = e.vales[j]; break; } }
+      if(v && v.firmado_storage_path){ abrirDocumentoStorage(v.firmado_storage_path, false, v.firmado_nombre_archivo); }
+    });
+  }
+  var actBtns = el.querySelectorAll("[data-vale-actualizar-firmado]");
+  for(i=0;i<actBtns.length;i++){
+    actBtns[i].addEventListener("click", function(){
+      var id = this.getAttribute("data-vale-actualizar-firmado");
+      var input = el.querySelector('[data-vale-firmado-file="'+cssEscape(id)+'"]');
+      if(input) input.click();
     });
   }
 }
