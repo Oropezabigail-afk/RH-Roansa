@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Firmar vale de uniforme &middot; ROANSA</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Segoe UI', Arial, sans-serif; background:#f0f1f3; color:#222; }
+  .wrap { max-width:520px; margin:0 auto; padding:24px 18px 60px; }
+  .head { text-align:center; margin-bottom:20px; }
+  .head .brand { font-weight:800; font-size:20px; }
+  .brand .roa { color:#c8202f; }
+  .brand .nsa { color:#231f20; }
+  .card { background:#fff; border-radius:14px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,.08); margin-bottom:18px; }
+  .card h2 { margin:0 0 12px; font-size:17px; }
+  .dl { display:grid; grid-template-columns:1fr; gap:8px; font-size:14px; }
+  .dl .row { display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:6px; }
+  .dl .lbl { color:#888; }
+  .items { font-size:13px; color:#444; margin-top:10px; line-height:1.6; }
+  .sig-box { border:2px dashed #ccc; border-radius:10px; margin-top:10px; touch-action:none; }
+  canvas { display:block; width:100%; height:220px; border-radius:8px; }
+  .actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  .btn { flex:1; min-width:140px; padding:13px 16px; border-radius:8px; border:none; font-size:15px; font-weight:600; cursor:pointer; }
+  .btn.primary { background:#c8202f; color:#fff; }
+  .btn.primary:disabled { background:#e6a3a9; cursor:not-allowed; }
+  .btn.secondary { background:#eee; color:#333; }
+  .msg { text-align:center; padding:30px 16px; }
+  .msg.ok { color:#2e9e4c; }
+  .msg.err { color:#c8202f; }
+  .msg svg { width:52px; height:52px; margin-bottom:10px; }
+  .note { font-size:12px; color:#888; margin-top:10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="brand"><span class="roa">ROA</span><span class="nsa">NSA</span></div>
+    <div style="font-size:11px;letter-spacing:1px;color:#888;">SEGURIDAD PRIVADA</div>
+  </div>
+  <div id="app"><div class="card"><div class="msg">Cargando...</div></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+var SUPABASE_URL = "https://pwhjjyugrazlnpovwbht.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_0BdErsGnzrjuobZBXyobEA_S_sKHtTZ";
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var app = document.getElementById("app");
+
+function esc(s){
+  s = (s===undefined || s===null) ? "" : String(s);
+  return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;").split('"').join("&quot;");
+}
+function fmtDate(str){
+  if(!str) return "";
+  var d = new Date(str + "T00:00:00");
+  if(isNaN(d.getTime())) return str;
+  var meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  return d.getDate() + " de " + meses[d.getMonth()] + " de " + d.getFullYear();
+}
+function getToken(){
+  var params = new URLSearchParams(window.location.search);
+  return params.get("token") || "";
+}
+
+function showMensaje(tipo, titulo, texto){
+  var icono = tipo === "ok"
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="#2e9e4c" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="#c8202f" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>';
+  app.innerHTML = '<div class="card"><div class="msg '+tipo+'">'+icono+'<h2>'+esc(titulo)+'</h2><p>'+esc(texto)+'</p></div></div>';
+}
+
+function render(vf){
+  var items = vf.items || [];
+  var itemsHtml = items.map(function(it){
+    return esc(it.nombre) + (it.talla ? (" (" + esc(it.talla) + ")") : "") + " x" + it.cantidad + (it.estado ? (" &middot; " + esc(it.estado==="USADO"?"Usado":"Nuevo")) : "");
+  }).join("<br>");
+
+  var html = '<div class="card">';
+  html += '<h2>Vale de uniforme &middot; '+esc(vf.folio||"")+'</h2>';
+  html += '<div class="dl">';
+  html += '<div class="row"><span class="lbl">Nombre</span><span>'+esc(vf.nombre_empleado||"")+'</span></div>';
+  html += '<div class="row"><span class="lbl">Empresa</span><span>'+esc(vf.empresa||"")+'</span></div>';
+  html += '<div class="row"><span class="lbl">Servicio</span><span>'+esc(vf.servicio||"")+'</span></div>';
+  html += '<div class="row"><span class="lbl">Fecha de entrega</span><span>'+fmtDate(vf.fecha)+'</span></div>';
+  html += '</div>';
+  html += '<div class="items"><strong>Artículos entregados:</strong><br>'+(itemsHtml || "—")+'</div>';
+  html += '</div>';
+
+  html += '<div class="card">';
+  html += '<h2>Firma aquí para confirmar que recibiste lo anterior</h2>';
+  html += '<div class="sig-box"><canvas id="sigCanvas"></canvas></div>';
+  html += '<div class="actions">';
+  html += '<button class="btn secondary" id="btnLimpiar">Limpiar</button>';
+  html += '<button class="btn primary" id="btnFirmar" disabled>Firmar y confirmar</button>';
+  html += '</div>';
+  html += '<div class="note">Al firmar se genera un documento con tu firma y queda registrado automáticamente en el sistema. Esta liga deja de funcionar después de firmar.</div>';
+  html += '<div id="firmarStatus" class="note"></div>';
+  html += '</div>';
+
+  app.innerHTML = html;
+
+  var canvas = document.getElementById("sigCanvas");
+  var ctx = canvas.getContext("2d");
+  function resizeCanvas(){
+    var ratio = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * ratio;
+    canvas.height = 220 * ratio;
+    ctx.scale(ratio, ratio);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#1a1a1a";
+  }
+  resizeCanvas();
+  var drawing = false, hasSignature = false, lastX = 0, lastY = 0;
+  function pos(ev){
+    var rect = canvas.getBoundingClientRect();
+    var cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
+    var cy = (ev.touches ? ev.touches[0].clientY : ev.clientY) - rect.top;
+    return { x: cx, y: cy };
+  }
+  function start(ev){ drawing = true; var p = pos(ev); lastX = p.x; lastY = p.y; ev.preventDefault(); }
+  function move(ev){
+    if(!drawing) return;
+    var p = pos(ev);
+    ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke();
+    lastX = p.x; lastY = p.y;
+    hasSignature = true;
+    document.getElementById("btnFirmar").disabled = false;
+    ev.preventDefault();
+  }
+  function end(){ drawing = false; }
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", end);
+  canvas.addEventListener("touchstart", start, { passive:false });
+  canvas.addEventListener("touchmove", move, { passive:false });
+  canvas.addEventListener("touchend", end);
+
+  document.getElementById("btnLimpiar").addEventListener("click", function(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasSignature = false;
+    document.getElementById("btnFirmar").disabled = true;
+  });
+
+  document.getElementById("btnFirmar").addEventListener("click", function(){
+    if(!hasSignature) return;
+    var btn = this;
+    btn.disabled = true;
+    var statusEl = document.getElementById("firmarStatus");
+    statusEl.textContent = "Generando documento...";
+
+    var firmaDataUrl = canvas.toDataURL("image/png");
+
+    try{
+      var JsPDFCtor = window.jspdf.jsPDF;
+      var doc = new JsPDFCtor({ unit:"pt", format:"letter" });
+      var y = 50;
+      doc.setFontSize(16); doc.setFont(undefined, "bold");
+      doc.text("VALE DE UNIFORME Y EQUIPO", 50, y); y += 22;
+      doc.setFontSize(11); doc.setFont(undefined, "normal");
+      doc.text("Folio: " + (vf.folio||""), 50, y); y += 16;
+      doc.text("Empresa: " + (vf.empresa||""), 50, y); y += 16;
+      doc.text("Nombre: " + (vf.nombre_empleado||""), 50, y); y += 16;
+      doc.text("Servicio: " + (vf.servicio||""), 50, y); y += 16;
+      doc.text("Fecha de entrega: " + fmtDate(vf.fecha), 50, y); y += 26;
+      doc.setFont(undefined, "bold"); doc.text("Artículos entregados:", 50, y); y += 18;
+      doc.setFont(undefined, "normal");
+      for(var i=0;i<items.length;i++){
+        var it = items[i];
+        var linea = "- " + it.nombre + (it.talla ? (" (" + it.talla + ")") : "") + " x" + it.cantidad + (it.estado ? (" [" + it.estado + "]") : "");
+        doc.text(linea, 50, y);
+        y += 15;
+        if(y > 680){ doc.addPage(); y = 50; }
+      }
+      y += 20;
+      doc.setFont(undefined, "bold"); doc.text("Firma digital de recepción:", 50, y); y += 8;
+      doc.addImage(firmaDataUrl, "PNG", 50, y, 220, 90);
+      y += 100;
+      doc.setFontSize(9); doc.setFont(undefined, "normal");
+      doc.text("Firmado electrónicamente el " + new Date().toLocaleString("es-MX") + ".", 50, y);
+
+      var pdfBlob = doc.output("blob");
+      var path = "firmas-publicas/" + vf.token + "/vale_firmado.pdf";
+      sb.storage.from("documentos").upload(path, pdfBlob, { upsert:true, contentType:"application/pdf" }).then(function(res){
+        if(res.error){ statusEl.textContent = "Error al subir: " + res.error.message; btn.disabled = false; return; }
+        sb.rpc("marcar_vale_firmado", { p_token: vf.token, p_firma_pdf_path: path }).then(function(res2){
+          if(res2.error || !res2.data){
+            statusEl.textContent = "No se pudo confirmar la firma. Intenta de nuevo o contacta a RH.";
+            btn.disabled = false;
+            return;
+          }
+          showMensaje("ok", "¡Firmado con éxito!", "Gracias, tu firma quedó registrada. Ya puedes cerrar esta ventana.");
+        });
+      });
+    }catch(err){
+      statusEl.textContent = "Ocurrió un error: " + err.message;
+      btn.disabled = false;
+    }
+  });
+}
+
+var token = getToken();
+if(!token){
+  showMensaje("err", "Liga inválida", "Esta liga no incluye un código válido. Pide que te envíen de nuevo la liga desde el sistema.");
+} else {
+  sb.rpc("obtener_vale_firma", { p_token: token }).then(function(res){
+    if(res.error || !res.data){
+      showMensaje("err", "Liga inválida", "No encontramos ningún vale con esta liga. Pide que te la vuelvan a enviar.");
+      return;
+    }
+    var vf = res.data;
+    if(vf.firmado){
+      showMensaje("ok", "Este vale ya fue firmado", "Se firmó el " + new Date(vf.firmado_en).toLocaleString("es-MX") + ". Si necesitas una copia, pide que RH te la comparta.");
+      return;
+    }
+    render(vf);
+  });
+}
+</script>
+</body>
+</html>

@@ -278,7 +278,8 @@ var state = {
   altaDraft: null,
   calYear: null,
   calMonth: null,
-  autoAnioSeleccionado: null
+  autoAnioSeleccionado: null,
+  valeFirmas: []
 };
 
 /* ================= UTILIDADES ================= */
@@ -462,12 +463,13 @@ function iniciarSincronizacionEnVivo(){
       .on("postgres_changes", { event: "*", schema: "public", table: "incapacidades" }, function(){ recargarListasYRerender(); })
       .on("postgres_changes", { event: "*", schema: "public", table: "inventario_items" }, function(){ recargarListasYRerender(); })
       .on("postgres_changes", { event: "*", schema: "public", table: "autos" }, function(){ recargarListasYRerender(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "vale_firmas" }, function(){ recargarListasYRerender(); })
       .subscribe();
   }
 }
 function recargarListasYRerender(){
   cargarListasDesdeSupabase().then(function(){
-    if(state.view === "panel" || state.view === "calendario" || state.view === "uniformes"){
+    if(state.view === "panel" || state.view === "calendario" || state.view === "uniformes" || state.view === "ficha" || state.view === "vale"){
       renderMain();
     }
   });
@@ -498,7 +500,11 @@ function cargarListasDesdeSupabase(){
     if(res.error){ console.warn("No se pudieron cargar los autos:", res.error.message); return; }
     state.autos = (res.data || []).map(function(r){ return { id:r.id, placas:r.placas || "", marca_modelo:r.marca_modelo || "", asignadoA:r.asignado_a || "", documentosPorAnio: r.documentos_por_anio || {} }; });
   });
-  return Promise.all([p1,p2,p3,p4]);
+  var p5 = sb.from("vale_firmas").select("*").then(function(res){
+    if(res.error){ console.warn("No se pudieron cargar las firmas de vales:", res.error.message); return; }
+    state.valeFirmas = res.data || [];
+  });
+  return Promise.all([p1,p2,p3,p4,p5]);
 }
 function dbUpsert(table, row){
   if(!sb || isConsulta()) return;
@@ -2914,6 +2920,14 @@ function wireValeForm(el, e){
     }
   });
 }
+function findValeFirma(valeId){
+  for(var i=0;i<state.valeFirmas.length;i++){ if(state.valeFirmas[i].vale_id === valeId) return state.valeFirmas[i]; }
+  return null;
+}
+function ligaFirmaURL(token){
+  var base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
+  return base + "firmar.html?token=" + token;
+}
 function fichaValesListaHTML(e){
   var vales = e.vales || [];
   if(vales.length === 0){ return '<div class="empty-msg">Sin vales de uniforme generados.</div>'; }
@@ -2922,6 +2936,7 @@ function fichaValesListaHTML(e){
   for(var i=0;i<lista.length;i++){
     var v = lista[i];
     var resumen = v.items.map(function(it){ return it.nombre + (it.talla ? (" (" + it.talla + ")") : "") + " x" + it.cantidad + (it.estado ? (" [" + it.estado + "]") : ""); }).join(", ");
+    var vf = findValeFirma(v.id);
     html += '<div class="doc-row" data-vale-row="'+esc(v.id)+'"><div class="doc-name" style="min-width:0;">' + esc(v.folio) + ' &middot; ' + fmtDate(v.fecha) + '<br><span style="font-weight:400;font-size:12px;color:#777;">' + esc(resumen) + '</span></div>';
     html += '<div class="doc-controls">';
     html += '<button class="btn small secondary" data-vale-descargar="' + v.id + '">Descargar vale (sin firma)</button>';
@@ -2936,6 +2951,19 @@ function fichaValesListaHTML(e){
     }
     html += '</div>';
     html += '<div class="doc-upload-status" data-vale-firmado-status="'+esc(v.id)+'" style="font-size:12px;color:#888;margin-top:4px;"></div>';
+    html += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #eee;">';
+    if(vf && vf.firmado){
+      html += '<span class="doc-status-tag tag-recibido">Firmado digitalmente &middot; ' + fmtDate((vf.firmado_en||"").slice(0,10)) + '</span> ';
+      if(vf.firma_pdf_path){ html += '<button class="btn small secondary" data-vale-ver-pdf-firmado="' + esc(vf.token) + '">Ver PDF firmado</button>'; }
+    } else if(vf && !vf.firmado){
+      html += '<span class="doc-status-tag tag-pendiente">Liga enviada, esperando firma</span> ';
+      html += '<button class="btn small secondary mut-accion" data-vale-copiar-liga="' + esc(vf.token) + '">Copiar liga</button> ';
+      html += '<button class="btn small secondary mut-accion" data-vale-nueva-liga="' + esc(v.id) + '">Generar nueva liga</button>';
+    } else {
+      html += '<button class="btn small secondary mut-accion" data-vale-generar-liga="' + esc(v.id) + '">Generar liga para firma digital</button>';
+    }
+    html += '<span class="liga-firma-box" data-vale-liga-box="'+esc(v.id)+'" style="display:block;margin-top:6px;font-size:12px;color:#1f5fa8;word-break:break-all;"></span>';
+    html += '</div>';
     html += '</div>';
   }
   return html;
@@ -2996,6 +3024,70 @@ function wireValesLista(el, e){
       var id = this.getAttribute("data-vale-actualizar-firmado");
       var input = el.querySelector('[data-vale-firmado-file="'+cssEscape(id)+'"]');
       if(input) input.click();
+    });
+  }
+  function crearLiga(valeId){
+    var v = null;
+    for(var j=0;j<e.vales.length;j++){ if(e.vales[j].id === valeId){ v = e.vales[j]; break; } }
+    if(!v) return;
+    var token = (window.crypto && window.crypto.randomUUID) ? (window.crypto.randomUUID() + window.crypto.randomUUID()) : uid() + uid() + uid();
+    var row = {
+      token: token, empleado_id: e.id, vale_id: v.id, folio: v.folio,
+      nombre_empleado: e.nombre, empresa: e.empresa, fecha: v.fecha, servicio: v.servicio,
+      items: v.items, firmado: false
+    };
+    sb.from("vale_firmas").insert(row).then(function(res){
+      if(res.error){ alert("No se pudo generar la liga: " + res.error.message); return; }
+      state.valeFirmas.push(row);
+      rerender();
+      mostrarLigaBox(valeId, token);
+    });
+  }
+  function mostrarLigaBox(valeId, token){
+    var box = el.querySelector('[data-vale-liga-box="'+cssEscape(valeId)+'"]');
+    if(!box) return;
+    var url = ligaFirmaURL(token);
+    box.innerHTML = esc(url) + ' <button class="btn small secondary mut-accion" data-copiar-url="'+esc(url)+'" style="margin-left:6px;">Copiar</button>';
+    var btn = box.querySelector('[data-copiar-url]');
+    if(btn){
+      btn.addEventListener("click", function(){
+        var texto = this.getAttribute("data-copiar-url");
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(texto).then(function(){ btn.textContent = "¡Copiada!"; });
+        }
+      });
+    }
+  }
+  var genBtns = el.querySelectorAll("[data-vale-generar-liga]");
+  for(i=0;i<genBtns.length;i++){
+    genBtns[i].addEventListener("click", function(){ crearLiga(this.getAttribute("data-vale-generar-liga")); });
+  }
+  var nuevaLigaBtns = el.querySelectorAll("[data-vale-nueva-liga]");
+  for(i=0;i<nuevaLigaBtns.length;i++){
+    nuevaLigaBtns[i].addEventListener("click", function(){
+      if(!window.confirm("Esto crea una liga nueva; la anterior deja de ser válida en la app (aunque técnicamente siga abierta si alguien la guardó). ¿Continuar?")) return;
+      crearLiga(this.getAttribute("data-vale-nueva-liga"));
+    });
+  }
+  var copiarLigaBtns = el.querySelectorAll("[data-vale-copiar-liga]");
+  for(i=0;i<copiarLigaBtns.length;i++){
+    copiarLigaBtns[i].addEventListener("click", function(){
+      var token = this.getAttribute("data-vale-copiar-liga");
+      var url = ligaFirmaURL(token);
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(function(){ alert("Liga copiada:\n" + url); });
+      } else {
+        prompt("Copia esta liga:", url);
+      }
+    });
+  }
+  var verPdfBtns = el.querySelectorAll("[data-vale-ver-pdf-firmado]");
+  for(i=0;i<verPdfBtns.length;i++){
+    verPdfBtns[i].addEventListener("click", function(){
+      var token = this.getAttribute("data-vale-ver-pdf-firmado");
+      var vf = null;
+      for(var j=0;j<state.valeFirmas.length;j++){ if(state.valeFirmas[j].token === token){ vf = state.valeFirmas[j]; break; } }
+      if(vf && vf.firma_pdf_path){ abrirDocumentoStorage(vf.firma_pdf_path, false, "Vale_firmado_" + (vf.folio||"") + ".pdf"); }
     });
   }
 }
