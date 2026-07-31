@@ -270,6 +270,8 @@ var state = {
   valeCounter: 1,
   currentRole: "admin",
   currentUserName: "",
+  currentUserId: "",
+  currentUserAvatarPath: "",
   view: "panel",
   viewParam: null,
   altaStep: 1,
@@ -386,7 +388,8 @@ function empleadoToRow(e){
     documentos: e.documentos || {},
     sspc: e.sspc || { alta:"", documentos:[] },
     vales: e.vales || [],
-    antidoping_historial: e.antidoping_historial || []
+    antidoping_historial: e.antidoping_historial || [],
+    historial_empresa: e.historial_empresa || []
   };
 }
 function rowToEmpleado(row){
@@ -427,7 +430,8 @@ function rowToEmpleado(row){
     documentos: (row.documentos && Object.keys(row.documentos).length) ? row.documentos : blankDocs(),
     sspc: row.sspc || { alta:"", documentos:[] },
     vales: row.vales || [],
-    antidoping_historial: row.antidoping_historial || []
+    antidoping_historial: row.antidoping_historial || [],
+    historial_empresa: row.historial_empresa || []
   };
 }
 function syncEmployee(e){
@@ -515,6 +519,7 @@ function normalizeEmployee(e){
   if(e.fecha_baja === undefined) e.fecha_baja = "";
   if(e.dias_vacaciones_asignados === undefined) e.dias_vacaciones_asignados = "";
   if(!e.antidoping_historial) e.antidoping_historial = [];
+  if(!e.historial_empresa) e.historial_empresa = [];
   return e;
 }
 function saveState(){
@@ -700,7 +705,7 @@ function initLogin(){
   });
 }
 function cargarPerfilYEntrar(user){
-  sb.from("profiles").select("nombre,rol").eq("id", user.id).single().then(function(res){
+  sb.from("profiles").select("nombre,rol,avatar_path").eq("id", user.id).single().then(function(res){
     if(res.error || !res.data){
       byId("loginError").textContent = "Tu cuenta no tiene un perfil asignado en el sistema. Contacta a la administradora.";
       byId("loginScreen").style.display = "flex";
@@ -709,6 +714,8 @@ function cargarPerfilYEntrar(user){
     }
     state.currentRole = (res.data.rol === "administrador") ? "admin" : "consulta";
     state.currentUserName = res.data.nombre || user.email || "";
+    state.currentUserId = user.id;
+    state.currentUserAvatarPath = res.data.avatar_path || "";
     showApp();
   }).catch(function(){
     byId("loginError").textContent = "No se pudo validar tu perfil. Revisa tu conexión e intenta de nuevo.";
@@ -764,18 +771,20 @@ function renderSidebar(){
     { key:"alta", label:"Dar de alta" },
     { key:"calendario", label:"Calendario" },
     { key:"machotes", label:"Machotes" },
-    { key:"uniformes", label:"Inventario" }
+    { key:"uniformes", label:"Inventario" },
+    { key:"usuarios", label:"Usuarios" }
   ];
   var html = '<div class="sidebar-logo-box">' + logoFullHTML(42) + '</div>';
   html += '<nav class="sidebar-nav">';
   for(var i=0;i<items.length;i++){
     var it = items[i];
     if(it.key === "alta" && isConsulta()) continue;
+    if(it.key === "usuarios" && isConsulta()) continue;
     var activeClass = (state.view === it.key || (it.key==="empleados" && state.view==="ficha") || (it.key==="alta" && (state.view==="credencial"||state.view==="contrato")) || (it.key==="uniformes" && state.view==="vale")) ? " active" : "";
     html += '<button class="'+ (activeClass ? "active" : "") +'" data-nav="'+it.key+'">' + it.label + '</button>';
   }
   html += '</nav>';
-  html += '<div class="sidebar-foot">ROANSA &amp; SPG<br>' + esc(state.currentUserName || "") + '<br>' + (isConsulta() ? "Perfil: Consulta" : "Perfil: Administrador") + '<br><button id="btnCerrarSesion" style="margin-top:8px;background:transparent;border:1px solid #444;color:#ccc;border-radius:6px;padding:5px 10px;font-size:11px;">Cerrar sesión</button></div>';
+  html += '<div class="sidebar-foot"><div id="sidebarAvatarBox" style="margin-bottom:8px;"></div>ROANSA &amp; SPG<br>' + esc(state.currentUserName || "") + '<br>' + (isConsulta() ? "Perfil: Consulta" : "Perfil: Administrador") + '<br><button id="btnCerrarSesion" style="margin-top:8px;background:transparent;border:1px solid #444;color:#ccc;border-radius:6px;padding:5px 10px;font-size:11px;">Cerrar sesión</button></div>';
   byId("sidebar").innerHTML = html;
   var btns = byId("sidebar").querySelectorAll("[data-nav]");
   for(var j=0;j<btns.length;j++){
@@ -783,6 +792,15 @@ function renderSidebar(){
   }
   var outBtn = byId("btnCerrarSesion");
   if(outBtn) outBtn.addEventListener("click", cerrarSesion);
+  cargarAvatarSidebar();
+}
+function cargarAvatarSidebar(){
+  var box = byId("sidebarAvatarBox");
+  if(!box || !sb || !state.currentUserAvatarPath) return;
+  sb.storage.from("documentos").createSignedUrl(state.currentUserAvatarPath, 3600).then(function(res){
+    if(res.error || !res.data) return;
+    box.innerHTML = '<img src="'+res.data.signedUrl+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #444;">';
+  });
 }
 function switchView(name, param){
   if(name === "alta" && isConsulta()){ name = "panel"; }
@@ -802,6 +820,7 @@ function renderMain(){
   if(state.view === "alta") return renderAltaView(el);
   if(state.view === "calendario") return renderCalendarioView(el);
   if(state.view === "machotes") return renderMachotesView(el);
+  if(state.view === "usuarios") return renderUsuariosView(el);
   if(state.view === "credencial") return renderCredencialView(el, state.viewParam);
   if(state.view === "contrato") return renderContratoView(el, state.viewParam);
   if(state.view === "uniformes") return renderUniformesView(el);
@@ -1094,6 +1113,11 @@ function renderFichaView(el, id){
   html += dlItem("Vacaciones asignadas", e.fecha_ingreso ? (diasVacacionesAsignados(e) + " días" + (e.dias_vacaciones_asignados !== "" ? " (manual)" : " (ley)")) : "—");
   html += '</div>';
 
+  if(e.historial_empresa && e.historial_empresa.length){
+    html += '<h3 style="margin-top:22px;margin-bottom:12px;">Historial de empresa</h3>';
+    html += '<div>' + historialEmpresaHTML(e) + '</div>';
+  }
+
   html += '<h3 style="margin-bottom:12px;">Documentos del expediente</h3>';
   html += '<div class="note-box">Solo subir el archivo valida el documento (queda en verde). Si necesitas reemplazarlo usa "Actualizar documento".</div>';
   html += '<div id="fichaDocsContainer">' + fichaDocsHTML(e) + '</div>';
@@ -1139,6 +1163,10 @@ function fichaEditFormHTML(e){
   html += '<div class="form-grid">';
   html += efField("nombres", "Nombre(s)", "text", e.nombres);
   html += efField("apellidos", "Apellidos", "text", e.apellidos);
+  html += '<div class="form-field"><label>Empresa</label><select id="ef_empresa">';
+  html += '<option value="ROANSA" '+(e.empresa==="ROANSA"?"selected":"")+'>ROANSA</option>';
+  html += '<option value="SPG" '+(e.empresa==="SPG"?"selected":"")+'>SPG</option>';
+  html += '</select></div>';
   html += efField("puesto", "Puesto", "text", e.puesto);
   html += efField("area", "Área / Servicio", "text", e.area);
   html += '<div class="form-field"><label>Estatus</label><select id="ef_status">';
@@ -1161,6 +1189,7 @@ function fichaEditFormHTML(e){
   html += efField("dias_vacaciones_asignados", "Días de vacaciones asignados (vacío = usar tabla LFT)", "number", e.dias_vacaciones_asignados);
   html += '</div>';
   html += '<div class="form-field" id="ef_motivoBajaWrap" style="margin-top:12px;'+(e.status==="Baja"?"":"display:none;")+'"><label>Motivo de la baja</label><textarea id="ef_motivo_baja" rows="3" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">'+esc(e.motivo_baja)+'</textarea></div>';
+  html += '<div class="form-field" id="ef_empresaComentarioWrap" style="margin-top:12px;display:none;"><label>Motivo del cambio de empresa</label><textarea id="ef_empresa_comentario" rows="3" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;" placeholder="Explica por qué cambia de empresa..."></textarea></div>';
   html += '<div style="display:flex;gap:10px;margin-top:14px;">';
   html += '<button class="btn" data-action="guardar-ficha">Guardar cambios</button>';
   html += '<button class="btn secondary" data-action="cancelar-ficha">Cancelar</button>';
@@ -1174,7 +1203,20 @@ function wireFichaEditForm(e, el){
     byId("ef_bajaFechaWrap").style.display = esBaja ? "" : "none";
     byId("ef_motivoBajaWrap").style.display = esBaja ? "" : "none";
   });
+  var empresaSel = byId("ef_empresa");
+  var empresaOriginal = e.empresa;
+  empresaSel.addEventListener("change", function(){
+    byId("ef_empresaComentarioWrap").style.display = (this.value !== empresaOriginal) ? "" : "none";
+  });
   el.querySelector('[data-action="guardar-ficha"]').addEventListener("click", function(){
+    var nuevaEmpresa = val("ef_empresa");
+    if(nuevaEmpresa !== empresaOriginal){
+      var comentario = val("ef_empresa_comentario").trim();
+      if(!comentario){ alert("Indica el motivo del cambio de empresa."); return; }
+      if(!e.historial_empresa) e.historial_empresa = [];
+      e.historial_empresa.push({ id: uid(), fecha: new Date().toISOString().slice(0,10), de: empresaOriginal, a: nuevaEmpresa, comentario: comentario });
+      e.empresa = nuevaEmpresa;
+    }
     e.nombres = val("ef_nombres");
     e.apellidos = val("ef_apellidos");
     e.nombre = nombreCompleto(e.nombres, e.apellidos);
@@ -1203,6 +1245,17 @@ function wireFichaEditForm(e, el){
   el.querySelector('[data-action="cancelar-ficha"]').addEventListener("click", function(){
     renderFichaView(el, e.id);
   });
+}
+function historialEmpresaHTML(e){
+  var lista = (e.historial_empresa || []).slice().reverse();
+  if(lista.length === 0){ return '<div class="empty-msg">Sin cambios de empresa registrados.</div>'; }
+  var html = "";
+  for(var i=0;i<lista.length;i++){
+    var h = lista[i];
+    html += '<div class="doc-row"><div class="doc-name">'+fmtDate(h.fecha)+' &middot; '+esc(h.de)+' &rarr; '+esc(h.a)+'</div>';
+    html += '<div style="font-size:12.5px;color:#666;margin-top:4px;">'+esc(h.comentario||"")+'</div></div>';
+  }
+  return html;
 }
 function fichaDocsHTML(e){
   var html = "";
@@ -1856,6 +1909,71 @@ function wireMachoteBox(empresa){
       downloadBlob(base64ToBlob(state.machotes[empresa]), "Machote_" + empresa + ".docx");
     });
   }
+}
+
+/* ================= USUARIOS ================= */
+function renderUsuariosView(el){
+  var html = '<h1 class="view-title">Usuarios del sistema</h1>';
+  html += '<p class="view-sub">Foto de cada cuenta de acceso. El correo, la contraseña y el permiso (Administrador/Consulta) se manejan desde Supabase, como ya lo haces.</p>';
+  html += '<div id="usuariosLista"><div class="empty-msg">Cargando...</div></div>';
+  el.innerHTML = html;
+  if(!sb){ return; }
+  sb.from("profiles").select("id,nombre,rol,avatar_path").order("nombre").then(function(res){
+    var cont = byId("usuariosLista");
+    if(!cont) return;
+    if(res.error){ cont.innerHTML = '<div class="empty-msg">No se pudo cargar la lista de usuarios: '+esc(res.error.message)+'</div>'; return; }
+    var perfiles = res.data || [];
+    if(perfiles.length === 0){ cont.innerHTML = '<div class="empty-msg">Sin usuarios registrados.</div>'; return; }
+    var h = "";
+    for(var i=0;i<perfiles.length;i++){
+      var p = perfiles[i];
+      h += '<div class="doc-row" data-usuario="'+esc(p.id)+'">';
+      h += '<div style="display:flex;align-items:center;gap:12px;">';
+      h += '<div class="usuario-avatar-box" data-avatar-box="'+esc(p.id)+'" style="width:44px;height:44px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-weight:700;color:#999;overflow:hidden;">'+esc((p.nombre||"?").charAt(0).toUpperCase())+'</div>';
+      h += '<div><div style="font-weight:600;">'+esc(p.nombre||"(sin nombre)")+'</div><div style="font-size:12px;color:#777;">'+(p.rol==="administrador"?"Administrador":"Consulta")+'</div></div>';
+      h += '</div>';
+      h += '<div class="doc-controls"><input type="file" accept="image/*" data-avatar-file="'+esc(p.id)+'"><span class="doc-upload-status" data-avatar-status="'+esc(p.id)+'" style="font-size:12px;color:#888;"></span></div>';
+      h += '</div>';
+    }
+    cont.innerHTML = h;
+    for(i=0;i<perfiles.length;i++){
+      (function(p){
+        if(p.avatar_path){
+          sb.storage.from("documentos").createSignedUrl(p.avatar_path, 3600).then(function(res2){
+            if(res2.error || !res2.data) return;
+            var box = cont.querySelector('[data-avatar-box="'+p.id+'"]');
+            if(box) box.innerHTML = '<img src="'+res2.data.signedUrl+'" style="width:100%;height:100%;object-fit:cover;">';
+          });
+        }
+        var input = cont.querySelector('[data-avatar-file="'+p.id+'"]');
+        if(input){
+          input.addEventListener("change", function(ev){
+            var file = ev.target.files[0];
+            if(!file) return;
+            var estadoEl = cont.querySelector('[data-avatar-status="'+p.id+'"]');
+            if(estadoEl) estadoEl.textContent = "Subiendo...";
+            var path = "perfiles/" + p.id + "/" + Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9._-]+/g, "_");
+            sb.storage.from("documentos").upload(path, file, { upsert:true }).then(function(res3){
+              if(res3.error){ if(estadoEl) estadoEl.textContent = "Error: " + res3.error.message; return; }
+              sb.from("profiles").update({ avatar_path: path }).eq("id", p.id).then(function(res4){
+                if(res4.error){ if(estadoEl) estadoEl.textContent = "Error al guardar: " + res4.error.message; return; }
+                if(estadoEl) estadoEl.textContent = "Foto actualizada.";
+                sb.storage.from("documentos").createSignedUrl(path, 3600).then(function(res5){
+                  if(res5.error || !res5.data) return;
+                  var box = cont.querySelector('[data-avatar-box="'+p.id+'"]');
+                  if(box) box.innerHTML = '<img src="'+res5.data.signedUrl+'" style="width:100%;height:100%;object-fit:cover;">';
+                });
+                if(p.id === state.currentUserId){
+                  state.currentUserAvatarPath = path;
+                  cargarAvatarSidebar();
+                }
+              });
+            });
+          });
+        }
+      })(perfiles[i]);
+    }
+  });
 }
 
 /* ================= INVENTARIO ================= */
