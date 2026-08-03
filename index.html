@@ -259,12 +259,11 @@ var EJEMPLO_DOCX_BASE64 = "UEsDBBQAAAAIACO671ytUqWRlQEAAMoGAAATAAAAW0NvbnRlbnRfV
 /* ================= ESTADO ================= */
 var state = {
   employees: [],
-  machotes: { ROANSA:{PRUEBA:"",INDETERMINADO:""}, SPG:{PRUEBA:"",INDETERMINADO:""} },
+  machotes: { ROANSA:{PRUEBA:null,INDETERMINADO:null}, SPG:{PRUEBA:null,INDETERMINADO:null} },
   vacaciones: [],
   incapacidades: [],
   folioCounter: 1,
   contratoCounter: 1,
-  machoteVale: "",
   uniformeInventario: [],
   autos: [],
   valeCounter: 1,
@@ -464,12 +463,13 @@ function iniciarSincronizacionEnVivo(){
       .on("postgres_changes", { event: "*", schema: "public", table: "inventario_items" }, function(){ recargarListasYRerender(); })
       .on("postgres_changes", { event: "*", schema: "public", table: "autos" }, function(){ recargarListasYRerender(); })
       .on("postgres_changes", { event: "*", schema: "public", table: "vale_firmas" }, function(){ recargarListasYRerender(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "machotes" }, function(){ recargarListasYRerender(); })
       .subscribe();
   }
 }
 function recargarListasYRerender(){
   cargarListasDesdeSupabase().then(function(){
-    if(state.view === "panel" || state.view === "calendario" || state.view === "uniformes" || state.view === "ficha" || state.view === "vale"){
+    if(state.view === "panel" || state.view === "calendario" || state.view === "uniformes" || state.view === "ficha" || state.view === "vale" || state.view === "machotes" || state.view === "contrato"){
       renderMain();
     }
   });
@@ -504,7 +504,50 @@ function cargarListasDesdeSupabase(){
     if(res.error){ console.warn("No se pudieron cargar las firmas de vales:", res.error.message); return; }
     state.valeFirmas = res.data || [];
   });
-  return Promise.all([p1,p2,p3,p4,p5]);
+  var p6 = sb.from("machotes").select("*").then(function(res){
+    if(res.error){ console.warn("No se pudieron cargar los machotes de contrato:", res.error.message); return; }
+    var nuevo = { ROANSA:{PRUEBA:null,INDETERMINADO:null}, SPG:{PRUEBA:null,INDETERMINADO:null} };
+    (res.data || []).forEach(function(r){
+      if(nuevo[r.empresa] && (r.tipo === "PRUEBA" || r.tipo === "INDETERMINADO")){
+        nuevo[r.empresa][r.tipo] = { storage_path: r.storage_path, nombre_original: r.nombre_original || "" };
+      }
+    });
+    state.machotes = nuevo;
+  });
+  return Promise.all([p1,p2,p3,p4,p5,p6]);
+}
+function subirMachoteContrato(empresa, tipo, blobOrFile, nombreArchivo, cb){
+  if(!sb || isConsulta()){ if(cb) cb(false, "Sin permiso."); return; }
+  var path = "machotes/" + empresa + "_" + tipo + ".docx";
+  sb.storage.from("documentos").upload(path, blobOrFile, { upsert: true, contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }).then(function(res){
+    if(res.error){ if(cb) cb(false, res.error.message); return; }
+    var row = { id: empresa + "_" + tipo, empresa: empresa, tipo: tipo, storage_path: path, nombre_original: nombreArchivo || "" };
+    sb.from("machotes").upsert(row).then(function(res2){
+      if(res2.error){ if(cb) cb(false, res2.error.message); return; }
+      state.machotes[empresa][tipo] = { storage_path: path, nombre_original: nombreArchivo || "" };
+      if(cb) cb(true, null);
+    });
+  });
+}
+function extraerMachoteLegadoBase64(legacy, empresa, tipo){
+  if(!legacy) return "";
+  var v = legacy[empresa];
+  if(!v) return "";
+  var norm = normalizeMachotesEmpresaLegacy(v);
+  return norm[tipo] || "";
+}
+function migrarMachotesLegadoSiHaceFalta(legacyMachotes){
+  if(!legacyMachotes || !sb || isConsulta()) return;
+  var combos = [["ROANSA","PRUEBA"],["ROANSA","INDETERMINADO"],["SPG","PRUEBA"],["SPG","INDETERMINADO"]];
+  combos.forEach(function(c){
+    var empresa = c[0], tipo = c[1];
+    if(state.machotes[empresa][tipo]) return; // ya está en la nube, no se toca
+    var base64 = extraerMachoteLegadoBase64(legacyMachotes, empresa, tipo);
+    if(!base64) return;
+    subirMachoteContrato(empresa, tipo, base64ToBlob(base64), "Machote_" + empresa + "_" + tipo + "_migrado.docx", function(ok){
+      if(ok && (state.view === "machotes" || state.view === "contrato")) renderMain();
+    });
+  });
 }
 function dbUpsert(table, row){
   if(!sb || isConsulta()) return;
@@ -520,14 +563,10 @@ function dbDelete(table, id){
 }
 
 /* ================= PERSISTENCIA ================= */
-function normalizeMachotesEmpresa(v){
+function normalizeMachotesEmpresaLegacy(v){
   if(typeof v === "string"){ return { PRUEBA: v, INDETERMINADO: "" }; }
   if(v && typeof v === "object"){ return { PRUEBA: v.PRUEBA || "", INDETERMINADO: v.INDETERMINADO || "" }; }
   return { PRUEBA: "", INDETERMINADO: "" };
-}
-function normalizeMachotes(m){
-  m = m || {};
-  return { ROANSA: normalizeMachotesEmpresa(m.ROANSA), SPG: normalizeMachotesEmpresa(m.SPG) };
 }
 function normalizeEmployee(e){
   if(!e.vales) e.vales = [];
@@ -542,7 +581,6 @@ function saveState(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       employees: state.employees,
-      machotes: state.machotes,
       vacaciones: state.vacaciones,
       incapacidades: state.incapacidades,
       folioCounter: state.folioCounter,
@@ -556,28 +594,29 @@ function saveState(){
 function loadState(){
   var raw = null;
   try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){}
+  var legacyMachotes = null;
   if(raw){
     try{
       var data = JSON.parse(raw);
-      state.machotes = normalizeMachotes(data.machotes);
+      legacyMachotes = data.machotes || null;
       state.folioCounter = data.folioCounter || 1;
       state.contratoCounter = data.contratoCounter || 1;
       state.valeCounter = data.valeCounter || 1;
     }catch(e){ console.warn("Error leyendo datos guardados", e); }
   } else {
-    state.machotes = normalizeMachotes(null);
     state.folioCounter = 1;
     state.contratoCounter = 1;
     state.valeCounter = 1;
   }
-  /* Empleados, vacaciones, incapacidades, inventario y autos ya viven en Supabase */
-  return Promise.all([cargarEmpleadosDesdeSupabase(), cargarListasDesdeSupabase()]);
+  /* Empleados, vacaciones, incapacidades, inventario, autos y machotes ya viven en Supabase */
+  return Promise.all([cargarEmpleadosDesdeSupabase(), cargarListasDesdeSupabase()]).then(function(){
+    migrarMachotesLegadoSiHaceFalta(legacyMachotes);
+  });
 }
 function exportarRespaldo(){
   var data = {
     _tipo: "respaldo_rh_roansa_spg", _version: 1, _fecha: new Date().toISOString(),
     employees: state.employees,
-    machotes: state.machotes,
     vacaciones: state.vacaciones,
     incapacidades: state.incapacidades,
     folioCounter: state.folioCounter,
@@ -598,12 +637,10 @@ function importarRespaldo(file, cb){
       if(!data || !Array.isArray(data.employees)){ throw new Error("El archivo no parece un respaldo válido."); }
       state.employees = data.employees || [];
       for(var i=0;i<state.employees.length;i++){ normalizeEmployee(state.employees[i]); }
-      state.machotes = normalizeMachotes(data.machotes);
       state.vacaciones = data.vacaciones || [];
       state.incapacidades = data.incapacidades || [];
       state.folioCounter = data.folioCounter || 1;
       state.contratoCounter = data.contratoCounter || 1;
-      state.machoteVale = data.machoteVale || "";
       state.uniformeInventario = data.uniformeInventario || [];
       state.autos = data.autos || [];
       state.valeCounter = data.valeCounter || 1;
@@ -1817,12 +1854,17 @@ function base64ToArrayBuffer(base64){
 function base64ToBlob(base64){
   return new Blob([base64ToArrayBuffer(base64)], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
 }
-function generarDocxDesdeMachote(machoteBase64, vars){
-  var zip = new PizZip(base64ToArrayBuffer(machoteBase64));
+function generarDocxDesdeZip(zip, vars){
   var DocxCtor = window.docxtemplater.default || window.docxtemplater;
   var doc = new DocxCtor(zip, { paragraphLoop: true, linebreaks: true, delimiters: { start: "{{", end: "}}" } });
   doc.render(vars);
   return doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+}
+function generarDocxDesdeMachote(machoteBase64, vars){
+  return generarDocxDesdeZip(new PizZip(base64ToArrayBuffer(machoteBase64)), vars);
+}
+function generarDocxDesdeArrayBuffer(buffer, vars){
+  return generarDocxDesdeZip(new PizZip(buffer), vars);
 }
 function downloadBlob(blob, filename){
   var url = URL.createObjectURL(blob);
@@ -1878,29 +1920,48 @@ function renderContratoView(el, id){
   byId("tipoContratoInput").addEventListener("change", actualizarWarnTipo);
 
   el.querySelector('[data-action="generar-docx"]').addEventListener("click", function(){
-    try{
-      var tipo = val("tipoContratoInput");
-      var machote = machotesEmpresa[tipo];
-      if(!machote){ alert("No hay un machote de \"" + (tipo==="PRUEBA"?"a prueba":"indeterminado") + "\" cargado para " + e.empresa + ". Ve a la sección Machotes para cargarlo."); return; }
-      var fc = val("fechaContratoInput");
-      var vars = buildContractVars(e, fc, tipo === "PRUEBA" ? "A PRUEBA" : "INDETERMINADO");
-      var blob = generarDocxDesdeMachote(machote, vars);
-      var fileName = "Contrato_" + (e.nombre || "empleado").replace(/[^a-zA-Z0-9]+/g, "_") + ".docx";
-      downloadBlob(blob, fileName);
-      e.fecha_contrato = fc;
-      e.id_contrato = vars.id_contrato;
-      e.tipo_contrato = tipo;
-      state.contratoCounter++;
-      saveState();
-      syncEmployee(e);
-      byId("contratoStatus").textContent = "Contrato generado y descargado como " + fileName + ".";
-    }catch(err){
-      var msg = err.message;
-      if(err.properties && err.properties.errors && err.properties.errors.length){
-        msg = err.properties.errors.map(function(er){ return er.message; }).join(" | ");
+    var tipo = val("tipoContratoInput");
+    var slot = machotesEmpresa[tipo];
+    if(!slot){ alert("No hay un machote de \"" + (tipo==="PRUEBA"?"a prueba":"indeterminado") + "\" cargado para " + e.empresa + ". Ve a la sección Machotes para cargarlo."); return; }
+    var btn = this;
+    btn.disabled = true;
+    byId("contratoStatus").style.color = "#2e9e4c";
+    byId("contratoStatus").textContent = "Generando...";
+    sb.storage.from("documentos").download(slot.storage_path).then(function(res){
+      if(res.error || !res.data){
+        btn.disabled = false;
+        byId("contratoStatus").style.color = "#c8202f";
+        byId("contratoStatus").textContent = "No se pudo descargar el machote: " + (res.error ? res.error.message : "");
+        return;
       }
-      alert("No se pudo generar el contrato: " + msg);
-    }
+      res.data.arrayBuffer().then(function(buffer){
+        try{
+          var fc = val("fechaContratoInput");
+          var vars = buildContractVars(e, fc, tipo === "PRUEBA" ? "A PRUEBA" : "INDETERMINADO");
+          var blob = generarDocxDesdeArrayBuffer(buffer, vars);
+          var fileName = "Contrato_" + (e.nombre || "empleado").replace(/[^a-zA-Z0-9]+/g, "_") + ".docx";
+          downloadBlob(blob, fileName);
+          e.fecha_contrato = fc;
+          e.id_contrato = vars.id_contrato;
+          e.tipo_contrato = tipo;
+          state.contratoCounter++;
+          saveState();
+          syncEmployee(e);
+          btn.disabled = false;
+          byId("contratoStatus").style.color = "#2e9e4c";
+          byId("contratoStatus").textContent = "Contrato generado y descargado como " + fileName + ".";
+        }catch(err){
+          var msg = err.message;
+          if(err.properties && err.properties.errors && err.properties.errors.length){
+            msg = err.properties.errors.map(function(er){ return er.message; }).join(" | ");
+          }
+          btn.disabled = false;
+          byId("contratoStatus").style.color = "#c8202f";
+          byId("contratoStatus").textContent = "";
+          alert("No se pudo generar el contrato: " + msg);
+        }
+      });
+    });
   });
 }
 
@@ -1929,15 +1990,16 @@ function machoteBoxHTML(empresa, cls){
   html += '<h3 style="color:'+color+';">'+(empresa==="ROANSA" ? "&#128308; " : "&#128309; ")+'Contrato '+empresa+'</h3>';
   for(var i=0;i<MACHOTE_TIPOS.length;i++){
     var t = MACHOTE_TIPOS[i];
-    var tiene = !!state.machotes[empresa][t.key];
+    var slot = state.machotes[empresa][t.key];
     html += '<div class="machote-sub" style="margin-top:'+(i===0?"0":"18px")+';padding-top:'+(i===0?"0":"14px")+';'+(i===0?"":"border-top:1px solid #eee;")+'">';
     html += '<div style="font-weight:700;font-size:13px;margin-bottom:4px;">Contrato '+t.label+'</div>';
-    html += '<div class="machote-status">' + (tiene ? "Machote cargado (.docx) listo para usar." : "Aún no hay un machote cargado para " + t.label.toLowerCase() + ".") + '</div>';
+    html += '<div class="machote-status">' + (slot ? ("Machote cargado (.docx) listo para usar" + (slot.nombre_original ? (" &middot; " + esc(slot.nombre_original)) : "") + ". Sincronizado en la nube, visible en cualquier equipo.") : "Aún no hay un machote cargado para " + t.label.toLowerCase() + ".") + '</div>';
     html += '<input type="file" id="machoteFile_'+empresa+'_'+t.key+'" accept=".docx">';
+    html += '<div id="machoteEstado_'+empresa+'_'+t.key+'" style="font-size:12px;color:#888;margin-top:4px;"></div>';
     html += '<div style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap;">';
     html += '<button class="btn small secondary mut-accion" data-machote-ejemplo="'+empresa+'_'+t.key+'">Usar ejemplo</button>';
     html += '<button class="btn small secondary" data-machote-descargar-ejemplo="'+empresa+'_'+t.key+'">Descargar plantilla de ejemplo</button>';
-    if(tiene){ html += '<button class="btn small secondary" data-machote-descargar="'+empresa+'_'+t.key+'">Descargar machote actual</button>'; }
+    if(slot){ html += '<button class="btn small secondary" data-machote-descargar="'+empresa+'_'+t.key+'">Descargar machote actual</button>'; }
     html += '</div>';
     html += '</div>';
   }
@@ -1947,22 +2009,22 @@ function machoteBoxHTML(empresa, cls){
 function wireMachoteBox(empresa){
   for(var i=0;i<MACHOTE_TIPOS.length;i++){
     (function(tipoKey){
-      byId("machoteFile_" + empresa + "_" + tipoKey).addEventListener("change", function(e){
-        var file = e.target.files[0];
+      var estadoEl = byId("machoteEstado_" + empresa + "_" + tipoKey);
+      byId("machoteFile_" + empresa + "_" + tipoKey).addEventListener("change", function(ev){
+        var file = ev.target.files[0];
         if(!file) return;
-        var reader = new FileReader();
-        reader.onload = function(ev){
-          var base64 = String(ev.target.result).split(",")[1];
-          state.machotes[empresa][tipoKey] = base64;
-          saveState();
+        estadoEl.textContent = "Subiendo...";
+        subirMachoteContrato(empresa, tipoKey, file, file.name, function(ok, error){
+          if(!ok){ alert("No se pudo subir el machote: " + error); estadoEl.textContent = ""; return; }
           renderMachotesView(byId("mainContent"));
-        };
-        reader.readAsDataURL(file);
+        });
       });
       document.querySelector('[data-machote-ejemplo="'+empresa+'_'+tipoKey+'"]').addEventListener("click", function(){
-        state.machotes[empresa][tipoKey] = EJEMPLO_DOCX_BASE64;
-        saveState();
-        renderMachotesView(byId("mainContent"));
+        estadoEl.textContent = "Cargando ejemplo...";
+        subirMachoteContrato(empresa, tipoKey, base64ToBlob(EJEMPLO_DOCX_BASE64), "Machote_ejemplo.docx", function(ok, error){
+          if(!ok){ alert("No se pudo cargar el ejemplo: " + error); estadoEl.textContent = ""; return; }
+          renderMachotesView(byId("mainContent"));
+        });
       });
       document.querySelector('[data-machote-descargar-ejemplo="'+empresa+'_'+tipoKey+'"]').addEventListener("click", function(){
         downloadBlob(base64ToBlob(EJEMPLO_DOCX_BASE64), "Machote_ejemplo_" + empresa + "_" + tipoKey + ".docx");
@@ -1970,7 +2032,14 @@ function wireMachoteBox(empresa){
       var descargarBtn = document.querySelector('[data-machote-descargar="'+empresa+'_'+tipoKey+'"]');
       if(descargarBtn){
         descargarBtn.addEventListener("click", function(){
-          downloadBlob(base64ToBlob(state.machotes[empresa][tipoKey]), "Machote_" + empresa + "_" + tipoKey + ".docx");
+          var slot = state.machotes[empresa][tipoKey];
+          if(!slot) return;
+          descargarBtn.disabled = true;
+          sb.storage.from("documentos").download(slot.storage_path).then(function(res){
+            descargarBtn.disabled = false;
+            if(res.error || !res.data){ alert("No se pudo descargar el machote: " + (res.error ? res.error.message : "")); return; }
+            downloadBlob(res.data, "Machote_" + empresa + "_" + tipoKey + ".docx");
+          });
         });
       }
     })(MACHOTE_TIPOS[i].key);
