@@ -131,11 +131,11 @@
   .cred-puesto { position:absolute; bottom:22px; left:0; width:100%; text-align:center; font-weight:800; font-size:12.5px; color:#fff; letter-spacing:.5px; }
   .cred-empresa-tag { position:absolute; bottom:6px; left:0; width:100%; text-align:center; font-size:8px; color:#fff; letter-spacing:2px; }
   .cred-back-top { position:absolute; top:0; left:0; width:100%; color:#fff; padding:10px 14px; font-size:10px; font-weight:700; line-height:1.6; box-sizing:border-box; }
-  .cred-back-mid { position:absolute; top:70px; left:0; width:100%; height:260px; padding:14px; text-align:center; box-sizing:border-box; }
-  .cred-sigline { width:70%; margin:40px auto 6px; border-bottom:1px solid #999; height:22px; }
+  .cred-back-mid { position:absolute; top:70px; left:0; width:100%; padding:14px; text-align:center; box-sizing:border-box; }
   .cred-coord { font-weight:800; font-size:10.5px; margin-top:6px; text-transform:uppercase; }
   .cred-ssc { font-size:9.5px; margin-top:14px; }
   .cred-exp { font-size:9.5px; margin-top:4px; }
+  .cred-sigline { position:absolute; bottom:70px; left:15%; width:70%; border-bottom:1px solid #999; height:1px; }
   .cred-back-bottom { position:absolute; bottom:0; left:0; width:100%; color:#fff; text-align:center; font-size:8.5px; line-height:1.6; padding:10px 10px; box-sizing:border-box; }
   .machote-status { font-size:13px; color:#444; background:#f7f7f7; border-radius:8px; padding:10px 12px; margin:10px 0; }
 
@@ -241,11 +241,11 @@ var CRED_PRINT_CSS = ".cred-card{width:270px;height:415px;position:relative;back
 ".cred-puesto{position:absolute;bottom:22px;left:0;width:100%;text-align:center;font-weight:800;font-size:12.5px;color:#fff;letter-spacing:.5px;} " +
 ".cred-empresa-tag{position:absolute;bottom:6px;left:0;width:100%;text-align:center;font-size:8px;color:#fff;letter-spacing:2px;} " +
 ".cred-back-top{position:absolute;top:0;left:0;width:100%;color:#fff;padding:10px 14px;font-size:10px;font-weight:700;line-height:1.6;box-sizing:border-box;} " +
-".cred-back-mid{position:absolute;top:70px;left:0;width:100%;height:260px;padding:14px;text-align:center;box-sizing:border-box;} " +
-".cred-sigline{width:70%;margin:40px auto 6px;border-bottom:1px solid #999;height:22px;} " +
+".cred-back-mid{position:absolute;top:70px;left:0;width:100%;padding:14px;text-align:center;box-sizing:border-box;} " +
 ".cred-coord{font-weight:800;font-size:10.5px;margin-top:6px;text-transform:uppercase;} " +
 ".cred-ssc{font-size:9.5px;margin-top:14px;} " +
 ".cred-exp{font-size:9.5px;margin-top:4px;} " +
+".cred-sigline{position:absolute;bottom:70px;left:15%;width:70%;border-bottom:1px solid #999;height:1px;} " +
 ".cred-back-bottom{position:absolute;bottom:0;left:0;width:100%;color:#fff;text-align:center;font-size:8.5px;line-height:1.6;padding:10px 10px;box-sizing:border-box;}";
 var REPRESENTANTE = "Eduardo Romero Suárez";
 var SSC_DATO = "0510-19";
@@ -1721,11 +1721,11 @@ function buildCredReversoHTML(e){
   html += '<div class="cred-content">';
   html += '<div class="cred-back-top" style="background:'+emp.color+';">FOLIO: '+esc(e.folio || "Sin generar")+'<br>VIGENCIA: '+esc(vigenciaCredencialTexto(e))+'</div>';
   html += '<div class="cred-back-mid">';
-  html += '<div class="cred-sigline"></div>';
   html += '<div class="cred-coord">'+esc(COORD_TITULO)+'</div>';
   html += '<div class="cred-ssc">No. de permiso SSC CDMX: '+SSC_DATO+'</div>';
   html += '<div class="cred-exp">Expediente: '+EXPEDIENTE_DATO+'</div>';
   html += '</div>';
+  html += '<div class="cred-sigline"></div>';
   html += '<div class="cred-back-bottom" style="background:'+emp.color+';">'+CRED_DIR_L1+'<br>'+CRED_DIR_L2+'<br>'+CRED_DIR_L3+'</div>';
   html += '</div></div>';
   return html;
