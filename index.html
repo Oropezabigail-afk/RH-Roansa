@@ -901,14 +901,17 @@ function renderMain(){
 
 /* ================= PANEL ================= */
 function renderPanelView(el){
-  var total = state.employees.length;
-  var activos = 0, roansaCount = 0, spgCount = 0;
+  var totalActivos = 0, bajas = 0, roansaCount = 0, spgCount = 0;
   var i;
   for(i=0;i<state.employees.length;i++){
     var e = state.employees[i];
-    if(e.status === "Activo") activos++;
-    if(e.empresa === "ROANSA") roansaCount++;
-    if(e.empresa === "SPG") spgCount++;
+    if(e.status === "Activo"){
+      totalActivos++;
+      if(e.empresa === "ROANSA") roansaCount++;
+      if(e.empresa === "SPG") spgCount++;
+    } else if(e.status === "Baja"){
+      bajas++;
+    }
   }
 
   var cumples = [];
@@ -951,8 +954,8 @@ function renderPanelView(el){
   html += '<p class="view-sub">Resumen general de recursos humanos &middot; ROANSA &amp; SPG</p>';
 
   html += '<div class="cards-grid">';
-  html += '<div class="stat-card"><div class="num">'+total+'</div><div class="lbl">Total de empleados</div></div>';
-  html += '<div class="stat-card"><div class="num">'+activos+'</div><div class="lbl">Activos</div></div>';
+  html += '<div class="stat-card"><div class="num">'+totalActivos+'</div><div class="lbl">Total de empleados</div></div>';
+  html += '<div class="stat-card"><div class="num">'+bajas+'</div><div class="lbl">BAJAS</div></div>';
   html += '<div class="stat-card"><div class="num">'+roansaCount+'</div><div class="lbl">ROANSA</div></div>';
   html += '<div class="stat-card"><div class="num">'+spgCount+'</div><div class="lbl">SPG</div></div>';
   html += '</div>';
