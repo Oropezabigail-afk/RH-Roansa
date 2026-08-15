@@ -809,6 +809,7 @@ function showApp(){
   byId("mainContent").innerHTML = '<div class="empty-msg">Cargando información...</div>';
   loadState().then(function(){
     iniciarSincronizacionEnVivo();
+    renderSidebar();
     switchView("panel");
   });
 }
@@ -853,6 +854,16 @@ function renderSidebar(){
   }
   cargarAvatarSidebar();
 }
+function actualizarNavActiva(){
+  var box = byId("sidebar");
+  if(!box) return;
+  var btns = box.querySelectorAll("[data-nav]");
+  for(var i=0;i<btns.length;i++){
+    var key = btns[i].getAttribute("data-nav");
+    var activo = (state.view === key || (key==="empleados" && state.view==="ficha") || (key==="alta" && (state.view==="credencial"||state.view==="contrato")) || (key==="uniformes" && state.view==="vale"));
+    if(activo) btns[i].classList.add("active"); else btns[i].classList.remove("active");
+  }
+}
 function cargarAvatarSidebar(){
   var box = byId("sidebarAvatarBox");
   if(!box || !sb || !state.currentUserAvatarPath) return;
@@ -866,7 +877,7 @@ function switchView(name, param){
   state.view = name;
   state.viewParam = param;
   if(name === "alta" && !state.altaDraft){ state.altaStep = 1; state.altaDraft = newAltaDraft(); }
-  renderSidebar();
+  actualizarNavActiva();
   renderMain();
   window.scrollTo(0,0);
 }
@@ -1235,6 +1246,9 @@ function efField(name, label, type, value){
 }
 function fichaEditFormHTML(e){
   var html = '<div class="form-box" style="margin-bottom:22px;"><h3>Editar datos del empleado</h3>';
+  html += '<div class="form-field" style="margin-bottom:14px;"><label>Foto del empleado</label>';
+  html += '<div id="ef_fotoPreview" style="margin-bottom:8px;">' + (e.foto ? '<img src="'+e.foto+'" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid #ddd;">' : '<span style="font-size:12px;color:#888;">Sin foto cargada.</span>') + '</div>';
+  html += '<input type="file" id="ef_foto" accept="image/*"></div>';
   html += '<div class="form-grid">';
   html += efField("nombres", "Nombre(s)", "text", e.nombres);
   html += efField("apellidos", "Apellidos", "text", e.apellidos);
@@ -1272,6 +1286,20 @@ function fichaEditFormHTML(e){
   return html;
 }
 function wireFichaEditForm(e, el){
+  var fotoNueva = null;
+  var fotoInput = byId("ef_foto");
+  if(fotoInput){
+    fotoInput.addEventListener("change", function(ev){
+      var file = ev.target.files[0];
+      if(!file) return;
+      var reader = new FileReader();
+      reader.onload = function(evt){
+        fotoNueva = evt.target.result;
+        byId("ef_fotoPreview").innerHTML = '<img src="'+fotoNueva+'" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid #ddd;">';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
   var statusSel = byId("ef_status");
   statusSel.addEventListener("change", function(){
     var esBaja = this.value === "Baja";
@@ -1292,6 +1320,7 @@ function wireFichaEditForm(e, el){
       e.historial_empresa.push({ id: uid(), fecha: new Date().toISOString().slice(0,10), de: empresaOriginal, a: nuevaEmpresa, comentario: comentario });
       e.empresa = nuevaEmpresa;
     }
+    if(fotoNueva){ e.foto = fotoNueva; }
     e.nombres = val("ef_nombres");
     e.apellidos = val("ef_apellidos");
     e.nombre = nombreCompleto(e.nombres, e.apellidos);
