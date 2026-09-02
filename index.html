@@ -587,6 +587,32 @@ function obtenerFotoUrl(path, cb){
     cb(res.data.signedUrl);
   });
 }
+function obtenerFotoUrlsBatch(paths, cb){
+  // Igual que obtenerFotoUrl, pero pide varias URLs firmadas en UNA sola
+  // llamada a Supabase (en vez de una petición de red por cada foto). Se usa
+  // en el directorio de empleados, donde se necesitan muchas fotos a la vez.
+  var resultado = {};
+  var ahora = Date.now();
+  var faltantes = [];
+  for(var i=0;i<paths.length;i++){
+    var p = paths[i];
+    var cached = _fotoUrlCache[p];
+    if(cached && (ahora - cached.t) < 55*60*1000){ resultado[p] = cached.url; }
+    else if(faltantes.indexOf(p) === -1){ faltantes.push(p); }
+  }
+  if(!faltantes.length || !sb){ cb(resultado); return; }
+  sb.storage.from("documentos").createSignedUrls(faltantes, 3600).then(function(res){
+    var filas = (res && res.data) || [];
+    for(var j=0;j<filas.length;j++){
+      var fila = filas[j];
+      if(fila && !fila.error && fila.signedUrl && fila.path){
+        _fotoUrlCache[fila.path] = { url: fila.signedUrl, t: Date.now() };
+        resultado[fila.path] = fila.signedUrl;
+      }
+    }
+    cb(resultado);
+  });
+}
 function extFromMime(type){
   if(!type) return "jpg";
   if(type.indexOf("png") !== -1) return "png";
@@ -1234,16 +1260,19 @@ function renderEmpGrid(){
   for(i=0;i<cards.length;i++){
     cards[i].addEventListener("click", function(){ switchView("ficha", this.getAttribute("data-goto-ficha")); });
   }
-  for(i=0;i<list.length;i++){
-    (function(emp){
-      if(!emp.foto_path) return;
-      obtenerFotoUrl(emp.foto_path, function(url){
-        if(!url) return;
+  var pathsConFoto = [];
+  for(i=0;i<list.length;i++){ if(list[i].foto_path) pathsConFoto.push(list[i].foto_path); }
+  if(pathsConFoto.length){
+    obtenerFotoUrlsBatch(pathsConFoto, function(mapa){
+      for(var k=0;k<list.length;k++){
+        var emp = list[k];
+        var url = mapa[emp.foto_path];
+        if(!url) continue;
         var img = byId("emp-foto-"+emp.id), ph = byId("emp-foto-ph-"+emp.id);
         if(img){ img.src = url; img.style.display = ""; }
         if(ph){ ph.style.display = "none"; }
-      });
-    })(list[i]);
+      }
+    });
   }
 }
 
