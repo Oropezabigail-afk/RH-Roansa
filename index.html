@@ -933,6 +933,7 @@ function renderPanelView(el){
   var proyectivas = [];
   for(i=0;i<state.employees.length;i++){
     var emp = state.employees[i];
+    if(emp.status === "Baja") continue;
     var dc = daysUntilNextOccurrence(emp.fecha_nacimiento);
     if(dc !== null && dc <= 30) cumples.push({ emp:emp, dias:dc });
     var da = daysUntilNextOccurrence(emp.fecha_ingreso);
@@ -954,6 +955,7 @@ function renderPanelView(el){
   var antidopingPend = [];
   for(i=0;i<state.employees.length;i++){
     var empA = state.employees[i];
+    if(empA.status === "Baja") continue;
     var proxA = proximaFechaAntidoping(empA);
     var diasA = diasHastaFecha(proxA);
     if(diasA !== null && diasA <= 30) antidopingPend.push({ emp:empA, dias:diasA });
@@ -2456,7 +2458,7 @@ function renderInvAntidopingTab(el){
   html += '<div class="form-box" style="margin-bottom:22px;"><h3>Registrar aplicación de prueba</h3>';
   html += '<div class="form-grid">';
   html += '<div class="form-field"><label>Empleado</label><select id="antEmpleado">';
-  for(var i=0;i<state.employees.length;i++){ html += '<option value="' + state.employees[i].id + '">' + esc(state.employees[i].nombre) + '</option>'; }
+  for(var i=0;i<state.employees.length;i++){ if(state.employees[i].status === "Baja") continue; html += '<option value="' + state.employees[i].id + '">' + esc(state.employees[i].nombre) + '</option>'; }
   html += '</select></div>';
   html += '<div class="form-field"><label>Fecha de aplicación</label><input type="date" id="antFecha" value="' + new Date().toISOString().slice(0,10) + '"></div>';
   html += '</div>';
@@ -2467,6 +2469,7 @@ function renderInvAntidopingTab(el){
   var filas = [];
   for(i=0;i<state.employees.length;i++){
     var e = state.employees[i];
+    if(e.status === "Baja") continue;
     var prox = proximaFechaAntidoping(e);
     var dias = diasHastaFecha(prox);
     var ultima = (e.antidoping_historial && e.antidoping_historial.length) ? e.antidoping_historial[e.antidoping_historial.length-1].fecha : null;
@@ -3360,6 +3363,7 @@ function eventosDelDia(y, m, d){
   var i, e;
   for(i=0;i<state.employees.length;i++){
     e = state.employees[i];
+    if(e.status === "Baja") continue;
     if(e.fecha_nacimiento){
       var nac = new Date(e.fecha_nacimiento + "T00:00:00");
       if(!isNaN(nac.getTime()) && nac.getMonth() === m && nac.getDate() === d) cumple.push(e.nombre);
@@ -3438,7 +3442,7 @@ function renderCalendarioView(el){
   html += '<div class="form-box" style="margin-top:24px;"><h3>Registrar periodo de vacaciones</h3>';
   html += '<div class="form-grid">';
   html += '<div class="form-field"><label>Empleado</label><select id="vacEmpleado">';
-  for(i=0;i<state.employees.length;i++){ html += '<option value="'+state.employees[i].id+'">'+esc(state.employees[i].nombre)+'</option>'; }
+  for(i=0;i<state.employees.length;i++){ if(state.employees[i].status === "Baja") continue; html += '<option value="'+state.employees[i].id+'">'+esc(state.employees[i].nombre)+'</option>'; }
   html += '</select></div>';
   html += '<div class="form-field"><label>Fecha inicio</label><input type="date" id="vacInicio"></div>';
   html += '<div class="form-field"><label>Fecha fin</label><input type="date" id="vacFin"></div>';
@@ -3452,7 +3456,7 @@ function renderCalendarioView(el){
   html += '<div class="form-box" style="margin-top:24px;"><h3>Registrar periodo de incapacidad</h3>';
   html += '<div class="form-grid">';
   html += '<div class="form-field"><label>Empleado</label><select id="incEmpleado">';
-  for(i=0;i<state.employees.length;i++){ html += '<option value="'+state.employees[i].id+'">'+esc(state.employees[i].nombre)+'</option>'; }
+  for(i=0;i<state.employees.length;i++){ if(state.employees[i].status === "Baja") continue; html += '<option value="'+state.employees[i].id+'">'+esc(state.employees[i].nombre)+'</option>'; }
   html += '</select></div>';
   html += '<div class="form-field"><label>Fecha inicio</label><input type="date" id="incInicio"></div>';
   html += '<div class="form-field"><label>Fecha fin</label><input type="date" id="incFin"></div>';
