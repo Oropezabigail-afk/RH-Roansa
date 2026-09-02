@@ -392,6 +392,7 @@ function empleadoToRow(e){
     fecha_baja: e.fecha_baja || null,
     motivo_baja: e.motivo_baja || null,
     foto: e.foto || null,
+    foto_path: e.foto_path || null,
     folio: e.folio || null,
     fecha_contrato: e.fecha_contrato || null,
     contrato_texto: e.contratoTexto || null,
@@ -435,6 +436,7 @@ function rowToEmpleado(row){
     fecha_baja: row.fecha_baja || "",
     motivo_baja: row.motivo_baja || "",
     foto: row.foto || "",
+    foto_path: row.foto_path || "",
     folio: row.folio || "",
     fecha_contrato: row.fecha_contrato || "",
     contratoTexto: row.contrato_texto || "",
@@ -487,8 +489,13 @@ function recargarListasYRerender(){
     }
   });
 }
+var EMPLEADOS_COLUMNAS_LIGERAS = "id,empresa,nombre,nombres,apellidos,puesto,area,status,fecha_ingreso,fecha_nacimiento,curp,rfc,nss,nacionalidad,estado_civil,tipo_sangre,calle,no_exterior,colonia,cp,estado,pais,salario_mensual,salario_diario,dias_vacaciones_asignados,fecha_baja,motivo_baja,foto_path,folio,fecha_contrato,contrato_texto,id_contrato,tipo_contrato,vigencia_credencial,documentos,sspc,vales,antidoping_historial,historial_empresa";
 function cargarEmpleadosDesdeSupabase(){
-  return sb.from("empleados").select("*").order("nombre").then(function(res){
+  // Nota: a propósito NO se trae la columna "foto" (la foto vieja en base64) en
+  // esta carga masiva del login — eso es lo que hacía lento el inicio de sesión.
+  // Las fotos ahora viven en Storage y se cargan solas, una por una, solo cuando
+  // se necesitan (ficha, credencial, directorio).
+  return sb.from("empleados").select(EMPLEADOS_COLUMNAS_LIGERAS).order("nombre").then(function(res){
     if(res.error){
       console.warn("No se pudieron cargar los empleados de Supabase:", res.error.message);
       return;
@@ -559,6 +566,56 @@ function migrarMachotesLegadoSiHaceFalta(legacyMachotes){
     if(!base64) return;
     subirMachoteContrato(empresa, tipo, base64ToBlob(base64), "Machote_" + empresa + "_" + tipo + "_migrado.docx", function(ok){
       if(ok && (state.view === "machotes" || state.view === "contrato")) renderMain();
+    });
+  });
+}
+/* ================= FOTOS DE EMPLEADOS (Storage, carga diferida) ================= */
+var _fotoUrlCache = {};
+function obtenerFotoUrl(path, cb){
+  if(!path || !sb){ cb(null); return; }
+  var cached = _fotoUrlCache[path];
+  if(cached && (Date.now() - cached.t) < 55*60*1000){ cb(cached.url); return; }
+  sb.storage.from("documentos").createSignedUrl(path, 3600).then(function(res){
+    if(res.error || !res.data){ cb(null); return; }
+    _fotoUrlCache[path] = { url: res.data.signedUrl, t: Date.now() };
+    cb(res.data.signedUrl);
+  });
+}
+function extFromMime(type){
+  if(!type) return "jpg";
+  if(type.indexOf("png") !== -1) return "png";
+  if(type.indexOf("webp") !== -1) return "webp";
+  if(type.indexOf("gif") !== -1) return "gif";
+  return "jpg";
+}
+function subirFotoEmpleado(empleadoId, blobOrFile, cb){
+  if(!sb || isConsulta()){ if(cb) cb(false, "Sin permiso."); return; }
+  var tipo = (blobOrFile && blobOrFile.type) || "image/jpeg";
+  var path = "empleados/" + empleadoId + "/foto_" + Date.now() + "." + extFromMime(tipo);
+  sb.storage.from("documentos").upload(path, blobOrFile, { upsert: true, contentType: tipo }).then(function(res){
+    if(res.error){ if(cb) cb(false, res.error.message); return; }
+    if(cb) cb(true, path);
+  });
+}
+function migrarFotosEmpleadosLegado(){
+  if(!sb || isConsulta()) return;
+  sb.from("empleados").select("id,foto").not("foto", "is", null).then(function(res){
+    if(res.error || !res.data || !res.data.length) return;
+    res.data.forEach(function(row){
+      if(!row.foto) return;
+      var emp = findEmployee(row.id);
+      if(!emp || emp.foto_path) return; // ya migrado o ya no existe localmente
+      fetch(row.foto).then(function(r){ return r.blob(); }).then(function(blob){
+        subirFotoEmpleado(row.id, blob, function(ok, pathOError){
+          if(!ok){ console.warn("No se pudo migrar la foto de " + row.id + ":", pathOError); return; }
+          sb.from("empleados").update({ foto_path: pathOError, foto: null }).eq("id", row.id).then(function(res2){
+            if(res2.error){ console.warn("No se pudo limpiar la foto vieja de " + row.id + ":", res2.error.message); return; }
+            emp.foto_path = pathOError;
+            emp.foto = "";
+            if((state.view === "ficha" && state.viewParam === row.id) || state.view === "empleados"){ renderMain(); }
+          });
+        });
+      }).catch(function(err){ console.warn("No se pudo leer la foto vieja de " + row.id + ":", err); });
     });
   });
 }
@@ -824,6 +881,7 @@ function showApp(){
     iniciarSincronizacionEnVivo();
     renderSidebar();
     switchView("panel");
+    migrarFotosEmpleadosLegado();
   });
 }
 function isConsulta(){ return state.currentRole === "consulta"; }
@@ -1157,8 +1215,8 @@ function renderEmpGrid(){
     var badgeClass = e.empresa === "ROANSA" ? "pill-roansa" : "pill-spg";
     html += '<div class="emp-card" data-goto-ficha="'+e.id+'">';
     html += '<span class="badge pill '+badgeClass+'">'+e.empresa+'</span>';
-    if(e.foto){ html += '<img class="emp-photo" src="'+e.foto+'">'; }
-    else{ html += '<div class="emp-photo-ph">'+esc((e.nombre||"?").charAt(0))+'</div>'; }
+    if(e.foto_path){ html += '<img class="emp-photo" id="emp-foto-'+e.id+'" style="display:none;">'; }
+    html += '<div class="emp-photo-ph" id="emp-foto-ph-'+e.id+'">'+esc((e.nombre||"?").charAt(0))+'</div>';
     html += '<div class="emp-name">'+esc(e.nombre)+'</div>';
     html += '<div class="emp-meta">'+esc(e.puesto)+' &middot; '+esc(e.area)+'</div>';
     html += '<div class="emp-meta"><span class="status-dot '+(e.status==="Activo"?"status-activo":"status-baja")+'"></span>'+e.status+'</div>';
@@ -1169,6 +1227,17 @@ function renderEmpGrid(){
   var cards = cont.querySelectorAll("[data-goto-ficha]");
   for(i=0;i<cards.length;i++){
     cards[i].addEventListener("click", function(){ switchView("ficha", this.getAttribute("data-goto-ficha")); });
+  }
+  for(i=0;i<list.length;i++){
+    (function(emp){
+      if(!emp.foto_path) return;
+      obtenerFotoUrl(emp.foto_path, function(url){
+        if(!url) return;
+        var img = byId("emp-foto-"+emp.id), ph = byId("emp-foto-ph-"+emp.id);
+        if(img){ img.src = url; img.style.display = ""; }
+        if(ph){ ph.style.display = "none"; }
+      });
+    })(list[i]);
   }
 }
 
@@ -1181,8 +1250,8 @@ function renderFichaView(el, id){
   html += '<a class="back-link" data-nav="empleados">&larr; Volver a Empleados</a>';
   html += '<div class="ficha-wrap">';
   html += '<div class="ficha-head">';
-  if(e.foto){ html += '<img class="ficha-photo" src="'+e.foto+'">'; }
-  else{ html += '<div class="ficha-photo-ph">'+esc((e.nombre||"?").charAt(0))+'</div>'; }
+  if(e.foto_path){ html += '<img class="ficha-photo" id="ficha-foto-'+e.id+'" style="display:none;">'; }
+  html += '<div class="ficha-photo-ph" id="ficha-foto-ph-'+e.id+'">'+esc((e.nombre||"?").charAt(0))+'</div>';
   html += '<div style="flex:1;">';
   html += '<div style="font-size:20px;font-weight:800;">'+esc(e.nombre)+' <span class="pill '+(e.empresa==="ROANSA"?"pill-roansa":"pill-spg")+'">'+e.empresa+'</span></div>';
   html += '<div style="color:#777;font-size:14px;margin-top:4px;">'+esc(e.puesto)+' &middot; '+esc(e.area)+' &middot; <span class="status-dot '+(e.status==="Activo"?"status-activo":"status-baja")+'"></span>'+esc(e.status)+'</div>';
@@ -1259,6 +1328,14 @@ function renderFichaView(el, id){
   if(e.empresa === "ROANSA"){ wireFichaSSPC(e, el); }
   wireValesLista(el, e);
   ocultarSiConsulta(el);
+  if(e.foto_path){
+    obtenerFotoUrl(e.foto_path, function(url){
+      if(!url) return;
+      var img = byId("ficha-foto-"+e.id), ph = byId("ficha-foto-ph-"+e.id);
+      if(img){ img.src = url; img.style.display = ""; }
+      if(ph){ ph.style.display = "none"; }
+    });
+  }
 }
 function efField(name, label, type, value){
   return '<div class="form-field"><label>'+esc(label)+'</label><input type="'+type+'" id="ef_'+name+'" value="'+esc(value||"")+'"></div>';
@@ -1266,7 +1343,7 @@ function efField(name, label, type, value){
 function fichaEditFormHTML(e){
   var html = '<div class="form-box" style="margin-bottom:22px;"><h3>Editar datos del empleado</h3>';
   html += '<div class="form-field" style="margin-bottom:14px;"><label>Foto del empleado</label>';
-  html += '<div id="ef_fotoPreview" style="margin-bottom:8px;">' + (e.foto ? '<img src="'+e.foto+'" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid #ddd;">' : '<span style="font-size:12px;color:#888;">Sin foto cargada.</span>') + '</div>';
+  html += '<div id="ef_fotoPreview" style="margin-bottom:8px;">' + (e.foto_path ? '<img id="ef_fotoActual" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid #ddd;">' : '<span style="font-size:12px;color:#888;">Sin foto cargada.</span>') + '</div>';
   html += '<input type="file" id="ef_foto" accept="image/*"></div>';
   html += '<div class="form-grid">';
   html += efField("nombres", "Nombre(s)", "text", e.nombres);
@@ -1310,18 +1387,24 @@ function fichaEditFormHTML(e){
   return html;
 }
 function wireFichaEditForm(e, el){
-  var fotoNueva = null;
+  var fotoPathNueva = null;
+  var fotoActualImg = byId("ef_fotoActual");
+  if(fotoActualImg && e.foto_path){
+    obtenerFotoUrl(e.foto_path, function(url){ if(url && fotoActualImg) fotoActualImg.src = url; });
+  }
   var fotoInput = byId("ef_foto");
   if(fotoInput){
     fotoInput.addEventListener("change", function(ev){
       var file = ev.target.files[0];
       if(!file) return;
-      var reader = new FileReader();
-      reader.onload = function(evt){
-        fotoNueva = evt.target.result;
-        byId("ef_fotoPreview").innerHTML = '<img src="'+fotoNueva+'" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid #ddd;">';
-      };
-      reader.readAsDataURL(file);
+      var previewUrl = URL.createObjectURL(file);
+      byId("ef_fotoPreview").innerHTML = '<img src="'+previewUrl+'" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid #ddd;"><div style="font-size:11px;color:#888;margin-top:4px;" id="ef_fotoSubiendo">Subiendo...</div>';
+      subirFotoEmpleado(e.id, file, function(ok, pathOError){
+        var st = byId("ef_fotoSubiendo");
+        if(!ok){ if(st) st.textContent = "Error al subir: " + pathOError; return; }
+        fotoPathNueva = pathOError;
+        if(st) st.textContent = "Foto lista.";
+      });
     });
   }
   var statusSel = byId("ef_status");
@@ -1344,7 +1427,7 @@ function wireFichaEditForm(e, el){
       e.historial_empresa.push({ id: uid(), fecha: new Date().toISOString().slice(0,10), de: empresaOriginal, a: nuevaEmpresa, comentario: comentario });
       e.empresa = nuevaEmpresa;
     }
-    if(fotoNueva){ e.foto = fotoNueva; }
+    if(fotoPathNueva){ e.foto_path = fotoPathNueva; }
     e.nombres = val("ef_nombres");
     e.apellidos = val("ef_apellidos");
     e.nombre = nombreCompleto(e.nombres, e.apellidos);
@@ -1482,7 +1565,7 @@ function newAltaDraft(){
     empresa:"", nombre:"", nombres:"", apellidos:"", puesto:"", area:"", status:"Activo",
     fecha_ingreso:"", fecha_nacimiento:"", curp:"", rfc:"", nss:"", nacionalidad:"Mexicana", estado_civil:"",
     calle:"", no_exterior:"", colonia:"", cp:"", estado:"", pais:"México",
-    salario_mensual:"", salario_diario:"", foto:"", documentos:blankDocs(), sspc:{ alta:"", documentos:[] }, vales:[]
+    salario_mensual:"", salario_diario:"", foto_path:"", documentos:blankDocs(), sspc:{ alta:"", documentos:[] }, vales:[]
   };
 }
 function captureStep1(){
@@ -1549,7 +1632,7 @@ function altaStep1HTML(){
   html += '</div>';
   html += '<div class="form-field" style="margin-top:16px;max-width:260px;"><label>Fotografía</label>';
   html += '<input type="file" id="alta_foto" accept="image/*">';
-  html += '<div id="fotoPreviewBox" style="margin-top:10px;">' + (d.foto ? '<img src="'+d.foto+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">' : '') + '</div>';
+  html += '<div id="fotoPreviewBox" style="margin-top:10px;">' + (d._fotoPreviewUrl ? '<img src="'+d._fotoPreviewUrl+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">' : '') + '</div>';
   html += '</div>';
   html += '<div style="margin-top:22px;display:flex;justify-content:flex-end;">';
   html += '<button class="btn" data-action="next1">Siguiente &rarr;</button>';
@@ -1684,12 +1767,15 @@ function wireAltaStep(el){
       fotoInput.addEventListener("change", function(e){
         var file = e.target.files[0];
         if(!file) return;
-        var reader = new FileReader();
-        reader.onload = function(ev){
-          state.altaDraft.foto = ev.target.result;
-          byId("fotoPreviewBox").innerHTML = '<img src="'+ev.target.result+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">';
-        };
-        reader.readAsDataURL(file);
+        var previewUrl = URL.createObjectURL(file);
+        state.altaDraft._fotoPreviewUrl = previewUrl;
+        byId("fotoPreviewBox").innerHTML = '<img src="'+previewUrl+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;"><div style="font-size:11px;color:#888;margin-top:4px;" id="alta_fotoSubiendo">Subiendo...</div>';
+        subirFotoEmpleado(state.altaDraft.id, file, function(ok, pathOError){
+          var st = byId("alta_fotoSubiendo");
+          if(!ok){ if(st) st.textContent = "Error al subir: " + pathOError; return; }
+          state.altaDraft.foto_path = pathOError;
+          if(st) st.textContent = "Foto lista.";
+        });
       });
     }
     var next1 = el.querySelector('[data-action="next1"]');
@@ -1710,6 +1796,7 @@ function wireAltaStep(el){
     el.querySelector('[data-action="back3"]').addEventListener("click", function(){ state.altaStep = 2; renderAltaView(el); });
     el.querySelector('[data-action="guardar"]').addEventListener("click", function(){
       var nuevo = JSON.parse(JSON.stringify(state.altaDraft));
+      delete nuevo._fotoPreviewUrl;
       nuevo.folio = "";
       nuevo.fecha_contrato = "";
       nuevo.contratoTexto = "";
@@ -1745,14 +1832,15 @@ function downloadDataUrl(filename, dataUrl){
 }
 
 /* ================= CREDENCIAL ================= */
-function buildCredFrenteHTML(e){
+function buildCredFrenteHTML(e, fotoUrlOverride){
   var emp = EMPRESAS[e.empresa];
   var html = '<div class="cred-card">';
   html += '<svg class="cred-bg" viewBox="0 0 270 415" xmlns="http://www.w3.org/2000/svg"><path d="M270,0 L270,415 L0,415 L0,355 C90,355 150,300 175,220 C195,150 190,70 195,0 Z" fill="'+emp.color+'"/></svg>';
   html += '<div class="cred-content">';
   html += '<div class="cred-logo-row">' + logoMarkSVG(30) + '<div><div class="cred-logo-text"><span style="color:#c8202f;">ROA</span><span style="color:#231f20;">NSA</span></div><div class="cred-logo-sub">SEGURIDAD PRIVADA</div></div></div>';
   html += '<div class="cred-razon">'+esc(emp.razon1)+'<br>'+esc(emp.razon2)+'</div>';
-  if(e.foto){ html += '<img class="cred-photo" src="'+e.foto+'">'; }
+  if(fotoUrlOverride){ html += '<img class="cred-photo" src="'+fotoUrlOverride+'">'; }
+  else if(e.foto_path){ html += '<img class="cred-photo" id="cred-foto-'+e.id+'" style="display:none;"><div class="cred-photo-ph" id="cred-foto-ph-'+e.id+'">'+esc((e.nombre||"?").charAt(0))+'</div>'; }
   else{ html += '<div class="cred-photo-ph">'+esc((e.nombre||"?").charAt(0))+'</div>'; }
   html += '<div class="cred-name">'+esc(e.nombre)+'</div>';
   html += '<div class="cred-puesto">'+esc((e.puesto||"").toUpperCase())+'</div>';
@@ -1809,14 +1897,34 @@ function renderCredencialView(el, id){
       saveState();
       syncEmployee(e);
       byId("credencialCards").innerHTML = buildCredFrenteHTML(e) + buildCredReversoHTML(e);
+      if(e.foto_path){
+        obtenerFotoUrl(e.foto_path, function(url){
+          if(!url) return;
+          var img = byId("cred-foto-"+e.id), ph = byId("cred-foto-ph-"+e.id);
+          if(img){ img.src = url; img.style.display = ""; }
+          if(ph){ ph.style.display = "none"; }
+        });
+      }
     });
   }
   ocultarSiConsulta(el);
+  if(e.foto_path){
+    obtenerFotoUrl(e.foto_path, function(url){
+      if(!url) return;
+      var img = byId("cred-foto-"+e.id), ph = byId("cred-foto-ph-"+e.id);
+      if(img){ img.src = url; img.style.display = ""; }
+      if(ph){ ph.style.display = "none"; }
+    });
+  }
 }
 function imprimirCredencial(e){
-  var body = '<div class="cred-page" style="font-family:Segoe UI,Arial,sans-serif;">' + buildCredFrenteHTML(e) + '</div>' +
-    '<div class="cred-page" style="font-family:Segoe UI,Arial,sans-serif;">' + buildCredReversoHTML(e) + '</div>';
-  openPrintWindow("Credencial - " + e.nombre, body, CRED_PRINT_CSS);
+  function abrir(fotoUrl){
+    var body = '<div class="cred-page" style="font-family:Segoe UI,Arial,sans-serif;">' + buildCredFrenteHTML(e, fotoUrl) + '</div>' +
+      '<div class="cred-page" style="font-family:Segoe UI,Arial,sans-serif;">' + buildCredReversoHTML(e) + '</div>';
+    openPrintWindow("Credencial - " + e.nombre, body, CRED_PRINT_CSS);
+  }
+  if(e.foto_path){ obtenerFotoUrl(e.foto_path, function(url){ abrir(url); }); }
+  else{ abrir(null); }
 }
 
 /* ================= CONTRATO ================= */

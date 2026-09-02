@@ -1,0 +1,23 @@
+-- ============================================================
+-- MIGRACIÓN 16 - Fotos de empleados en Storage
+-- Ejecutar en: SQL Editor de Supabase (proyecto RH ROANSA)
+--
+-- Agrega la columna "foto_path" a la tabla de empleados. A partir
+-- de ahora las fotos viven como archivos reales en Supabase
+-- Storage (igual que los documentos, autos y machotes), no como
+-- texto base64 dentro de la base de datos.
+--
+-- Esto es lo que arregla la lentitud al iniciar sesión: antes,
+-- cada inicio de sesión traía TODAS las fotos de TODOS los
+-- empleados de golpe. Ahora solo se trae la ruta del archivo, y
+-- la foto se carga sola, una por una, solo cuando se necesita
+-- (al abrir una ficha, la credencial o el directorio).
+--
+-- No se pierde ninguna foto: la primera vez que abras la app con
+-- esta actualización, un proceso en segundo plano migra
+-- automáticamente las fotos existentes (columna "foto") a Storage
+-- y limpia la columna vieja. No tienes que hacer nada más que
+-- correr este SQL y luego usar la app normalmente.
+-- ============================================================
+
+alter table public.empleados add column if not exists foto_path text;
