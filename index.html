@@ -131,7 +131,11 @@
   .cred-puesto { position:absolute; bottom:22px; left:0; width:100%; text-align:center; font-weight:800; font-size:12.5px; color:#fff; letter-spacing:.5px; }
   .cred-empresa-tag { position:absolute; bottom:6px; left:0; width:100%; text-align:center; font-size:8px; color:#fff; letter-spacing:2px; }
   .cred-back-top { position:absolute; top:0; left:0; width:100%; color:#fff; padding:10px 14px; font-size:10px; font-weight:700; line-height:1.6; box-sizing:border-box; }
-  .cred-back-mid { position:absolute; top:70px; left:0; width:100%; padding:14px; text-align:center; box-sizing:border-box; }
+  .cred-datos-id { position:absolute; top:58px; left:0; width:100%; padding:0 16px; box-sizing:border-box; font-size:9px; line-height:1.7; }
+  .cred-dato-row { display:flex; justify-content:space-between; gap:8px; border-bottom:1px dotted #ddd; padding:1px 0; }
+  .cred-dato-lbl { color:#888; font-weight:700; white-space:nowrap; }
+  .cred-dato-val { color:#222; font-weight:600; text-align:right; }
+  .cred-back-mid { position:absolute; top:132px; left:0; width:100%; padding:14px; text-align:center; box-sizing:border-box; }
   .cred-coord { font-weight:800; font-size:10.5px; margin-top:6px; text-transform:uppercase; }
   .cred-ssc { font-size:9.5px; margin-top:14px; }
   .cred-exp { font-size:9.5px; margin-top:4px; }
@@ -228,7 +232,10 @@ var CRED_DIR_L1 = "Fray Servando Teresa de Mier No. 840 - 203";
 var CRED_DIR_L2 = "Col. Jardín Balbuena C.P. 15900";
 var CRED_DIR_L3 = "Alcaldía Venustiano Carranza Tel. 55 6843 0373";
 var COORD_TITULO = "Coordinación de Factor Humano";
-var CRED_PRINT_CSS = ".cred-card{width:270px;height:415px;position:relative;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #ccc;} " +
+var CRED_PRINT_CSS = "@page{size:5.5in 8.5in;margin:0;} " +
+".cred-page{width:5.5in;height:8.5in;display:flex;align-items:center;justify-content:center;page-break-after:always;box-sizing:border-box;} " +
+".cred-page:last-child{page-break-after:auto;} " +
+".cred-card{width:270px;height:415px;position:relative;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #ccc;transform:scale(1.9556);} " +
 ".cred-bg{position:absolute;top:0;left:0;width:270px;height:415px;} " +
 ".cred-content{position:absolute;top:0;left:0;width:100%;height:100%;} " +
 ".cred-logo-row{position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:6px;} " +
@@ -241,7 +248,11 @@ var CRED_PRINT_CSS = ".cred-card{width:270px;height:415px;position:relative;back
 ".cred-puesto{position:absolute;bottom:22px;left:0;width:100%;text-align:center;font-weight:800;font-size:12.5px;color:#fff;letter-spacing:.5px;} " +
 ".cred-empresa-tag{position:absolute;bottom:6px;left:0;width:100%;text-align:center;font-size:8px;color:#fff;letter-spacing:2px;} " +
 ".cred-back-top{position:absolute;top:0;left:0;width:100%;color:#fff;padding:10px 14px;font-size:10px;font-weight:700;line-height:1.6;box-sizing:border-box;} " +
-".cred-back-mid{position:absolute;top:70px;left:0;width:100%;padding:14px;text-align:center;box-sizing:border-box;} " +
+".cred-datos-id{position:absolute;top:58px;left:0;width:100%;padding:0 16px;box-sizing:border-box;font-size:9px;line-height:1.7;} " +
+".cred-dato-row{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted #ddd;padding:1px 0;} " +
+".cred-dato-lbl{color:#888;font-weight:700;white-space:nowrap;} " +
+".cred-dato-val{color:#222;font-weight:600;text-align:right;} " +
+".cred-back-mid{position:absolute;top:132px;left:0;width:100%;padding:14px;text-align:center;box-sizing:border-box;} " +
 ".cred-coord{font-weight:800;font-size:10.5px;margin-top:6px;text-transform:uppercase;} " +
 ".cred-ssc{font-size:9.5px;margin-top:14px;} " +
 ".cred-exp{font-size:9.5px;margin-top:4px;} " +
@@ -368,6 +379,7 @@ function empleadoToRow(e){
     nss: e.nss || null,
     nacionalidad: e.nacionalidad || null,
     estado_civil: e.estado_civil || null,
+    tipo_sangre: e.tipo_sangre || null,
     calle: e.calle || null,
     no_exterior: e.no_exterior || null,
     colonia: e.colonia || null,
@@ -410,6 +422,7 @@ function rowToEmpleado(row){
     nss: row.nss || "",
     nacionalidad: row.nacionalidad || "Mexicana",
     estado_civil: row.estado_civil || "",
+    tipo_sangre: row.tipo_sangre || "",
     calle: row.calle || "",
     no_exterior: row.no_exterior || "",
     colonia: row.colonia || "",
@@ -1188,6 +1201,7 @@ function renderFichaView(el, id){
   html += dlItem("CURP", e.curp);
   html += dlItem("RFC", e.rfc);
   html += dlItem("NSS", e.nss);
+  html += dlItem("Tipo de sangre", e.tipo_sangre || "—");
   html += dlItem("Nacionalidad", e.nacionalidad);
   html += dlItem("Estado civil", e.estado_civil);
   html += dlItem("Domicilio", (e.calle||"") + " " + (e.no_exterior||"") + (e.colonia ? (", " + e.colonia) : "") + (e.cp ? (", C.P. " + e.cp) : ""));
@@ -1270,6 +1284,11 @@ function fichaEditFormHTML(e){
   html += efField("curp", "CURP", "text", e.curp);
   html += efField("rfc", "RFC", "text", e.rfc);
   html += efField("nss", "NSS", "text", e.nss);
+  html += '<div class="form-field"><label>Tipo de sangre</label><select id="ef_tipo_sangre">';
+  html += '<option value="">Sin especificar</option>';
+  var tiposSangre = ["O+","O-","A+","A-","B+","B-","AB+","AB-"];
+  for(var tsI=0;tsI<tiposSangre.length;tsI++){ html += '<option value="'+tiposSangre[tsI]+'" '+(e.tipo_sangre===tiposSangre[tsI]?"selected":"")+'>'+tiposSangre[tsI]+'</option>'; }
+  html += '</select></div>';
   html += efField("estado_civil", "Estado civil", "text", e.estado_civil);
   html += efField("calle", "Calle", "text", e.calle);
   html += efField("no_exterior", "No. exterior", "text", e.no_exterior);
@@ -1336,6 +1355,7 @@ function wireFichaEditForm(e, el){
     e.curp = val("ef_curp");
     e.rfc = val("ef_rfc");
     e.nss = val("ef_nss");
+    e.tipo_sangre = val("ef_tipo_sangre");
     e.estado_civil = val("ef_estado_civil");
     e.calle = val("ef_calle");
     e.no_exterior = val("ef_no_exterior");
@@ -1752,6 +1772,12 @@ function buildCredReversoHTML(e){
   html += '<svg class="cred-bg" viewBox="0 0 270 415" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="270" height="415" fill="#ffffff"/></svg>';
   html += '<div class="cred-content">';
   html += '<div class="cred-back-top" style="background:'+emp.color+';">FOLIO: '+esc(e.folio || "Sin generar")+'<br>VIGENCIA: '+esc(vigenciaCredencialTexto(e))+'</div>';
+  html += '<div class="cred-datos-id">';
+  html += '<div class="cred-dato-row"><span class="cred-dato-lbl">RFC</span><span class="cred-dato-val">'+esc(e.rfc || "—")+'</span></div>';
+  html += '<div class="cred-dato-row"><span class="cred-dato-lbl">CURP</span><span class="cred-dato-val">'+esc(e.curp || "—")+'</span></div>';
+  html += '<div class="cred-dato-row"><span class="cred-dato-lbl">NSS</span><span class="cred-dato-val">'+esc(e.nss || "—")+'</span></div>';
+  html += '<div class="cred-dato-row"><span class="cred-dato-lbl">Tipo de sangre</span><span class="cred-dato-val">'+esc(e.tipo_sangre || "—")+'</span></div>';
+  html += '</div>';
   html += '<div class="cred-back-mid">';
   html += '<div class="cred-coord">'+esc(COORD_TITULO)+'</div>';
   html += '<div class="cred-ssc">No. de permiso SSC CDMX: '+SSC_DATO+'</div>';
@@ -1786,9 +1812,8 @@ function renderCredencialView(el, id){
   ocultarSiConsulta(el);
 }
 function imprimirCredencial(e){
-  var body = '<div style="display:flex;gap:24px;padding:24px;font-family:Segoe UI,Arial,sans-serif;">' +
-    buildCredFrenteHTML(e) + buildCredReversoHTML(e) +
-  '</div>';
+  var body = '<div class="cred-page" style="font-family:Segoe UI,Arial,sans-serif;">' + buildCredFrenteHTML(e) + '</div>' +
+    '<div class="cred-page" style="font-family:Segoe UI,Arial,sans-serif;">' + buildCredReversoHTML(e) + '</div>';
   openPrintWindow("Credencial - " + e.nombre, body, CRED_PRINT_CSS);
 }
 
