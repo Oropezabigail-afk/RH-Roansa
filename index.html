@@ -391,7 +391,13 @@ function empleadoToRow(e){
     dias_vacaciones_asignados: (e.dias_vacaciones_asignados === "" || e.dias_vacaciones_asignados === undefined) ? null : e.dias_vacaciones_asignados,
     fecha_baja: e.fecha_baja || null,
     motivo_baja: e.motivo_baja || null,
-    foto: e.foto || null,
+    // OJO: la columna "foto" (base64 vieja) ya NO se manda aquí a propósito.
+    // Desde que las fotos viven en Storage, el objeto local "e" nunca trae
+    // cargada la foto vieja (no se selecciona en la carga masiva), así que
+    // mandar "foto: e.foto || null" en cada guardado borraría en silencio
+    // la foto real de cualquier empleado que aún no se hubiera migrado.
+    // Solo migrarFotosEmpleadosLegado() debe tocar esa columna (para
+    // limpiarla, después de subir la foto real a Storage).
     foto_path: e.foto_path || null,
     folio: e.folio || null,
     fecha_contrato: e.fecha_contrato || null,
