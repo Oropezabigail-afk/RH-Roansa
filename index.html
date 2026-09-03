@@ -520,7 +520,7 @@ function cargarListasDesdeSupabase(){
   });
   var p3 = sb.from("inventario_items").select("*").then(function(res){
     if(res.error){ console.warn("No se pudo cargar el inventario:", res.error.message); return; }
-    state.uniformeInventario = (res.data || []).map(function(r){ return { id:r.id, categoria:r.categoria, tipo:r.tipo, talla:r.talla || "", cantidad:r.cantidad || 0, estado:r.estado || "NUEVO" }; });
+    state.uniformeInventario = (res.data || []).map(function(r){ return { id:r.id, categoria:r.categoria, tipo:r.tipo, talla:r.talla || "", cantidad:r.cantidad || 0, estado:r.estado || "NUEVO", empresa:r.empresa || "" }; });
   });
   var p4 = sb.from("autos").select("*").then(function(res){
     if(res.error){ console.warn("No se pudieron cargar los autos:", res.error.message); return; }
@@ -1127,7 +1127,7 @@ function renderPanelView(el){
   else{
     for(i=0;i<stockBajo.length;i++){
       var sbItem = stockBajo[i];
-      html += '<div class="list-row"><span>'+esc(sbItem.nombre)+(sbItem.talla && !ignoraTalla(sbItem.categoria) ? (' &middot; Talla '+esc(sbItem.talla)) : '')+'</span><span class="pill pill-warn">'+sbItem.cantidad+' pieza(s)</span></div>';
+      html += '<div class="list-row"><span>'+esc(sbItem.nombre)+(sbItem.empresa ? ' <span class="pill '+(sbItem.empresa==="ROANSA"?"pill-roansa":"pill-spg")+'">'+sbItem.empresa+'</span>' : '')+(sbItem.talla && !ignoraTalla(sbItem.categoria) ? (' &middot; Talla '+esc(sbItem.talla)) : '')+'</span><span class="pill pill-warn">'+sbItem.cantidad+' pieza(s)</span></div>';
     }
   }
   html += '</div>';
@@ -2316,14 +2316,15 @@ function renderUsuariosView(el){
 }
 
 /* ================= INVENTARIO ================= */
+var TALLAS_CAMISOLA = ["32","34","36","38","40","42","44","46","48","50"];
 var CAT_UNIFORME = [
   { slug:"pantalon_negro", nombre:"PANTALÓN COMANDO NEGRO", tallaFija:null, sinBordado:true },
   { slug:"pantalon_gris", nombre:"PANTALÓN COMANDO GRIS C/SINTILLO", tallaFija:null, sinBordado:true },
-  { slug:"playera_polo_gris", nombre:"PLAYERA TIPO POLO GRIS", tallaFija:null },
-  { slug:"playera_ml_roja", nombre:"PLAYERA MANGA LARGA COLOR ROJO CON LOGOS", tallaFija:null },
-  { slug:"camisola_blanca", nombre:"CAMISOLA BLANCA", tallaFija:null },
-  { slug:"chamarra_rompevientos", nombre:"CHAMARRA ROMPEVIENTOS NEGRA", tallaFija:null },
-  { slug:"chamarra_desmontable", nombre:"CHAMARRA DESMONTABLE NEGRA", tallaFija:null },
+  { slug:"playera_polo_gris", nombre:"PLAYERA TIPO POLO GRIS", tallaFija:null, porEmpresa:true },
+  { slug:"playera_ml_roja", nombre:"PLAYERA MANGA LARGA COLOR ROJO CON LOGOS", tallaFija:null, porEmpresa:true },
+  { slug:"camisola_blanca", nombre:"CAMISOLA BLANCA", tallaFija:null, porEmpresa:true, opcionesTalla:TALLAS_CAMISOLA },
+  { slug:"chamarra_rompevientos", nombre:"CHAMARRA ROMPEVIENTOS NEGRA", tallaFija:null, porEmpresa:true },
+  { slug:"chamarra_desmontable", nombre:"CHAMARRA DESMONTABLE NEGRA", tallaFija:null, porEmpresa:true },
   { slug:"chaleco_gris", nombre:"CHALECO NEGRO CON GRIS", tallaFija:null },
   { slug:"chaleco_tactico", nombre:"CHALECO NEGRO TÁCTICO", tallaFija:null },
   { slug:"gorra_negra", nombre:"GORRA NEGRA", tallaFija:"ÚNICA" },
@@ -2355,20 +2356,20 @@ function catalogoItem(categoria, slug){
   return null;
 }
 function ignoraTalla(categoria){ return categoria === "complemento" || categoria === "antidoping"; }
-function inventarioDisponible(categoria, tipo, talla, estado){
+function inventarioDisponible(categoria, tipo, talla, estado, empresa){
   var total = 0;
   for(var i=0;i<state.uniformeInventario.length;i++){
     var it = state.uniformeInventario[i];
-    if(it.categoria === categoria && it.tipo === tipo && (ignoraTalla(categoria) || it.talla === talla) && (estado === undefined || (it.estado || "NUEVO") === estado)){
+    if(it.categoria === categoria && it.tipo === tipo && (ignoraTalla(categoria) || it.talla === talla) && (estado === undefined || (it.estado || "NUEVO") === estado) && ((it.empresa||"") === (empresa||""))){
       total += Number(it.cantidad) || 0;
     }
   }
   return total;
 }
-function ajustarInventarioDB(categoria, tipo, talla, estado, delta){
+function ajustarInventarioDB(categoria, tipo, talla, estado, delta, empresa){
   if(!sb) return Promise.resolve({ ok:false, error:"Sin conexión a la base de datos." });
   return sb.rpc("ajustar_inventario", {
-    p_categoria: categoria, p_tipo: tipo, p_talla: talla || "", p_estado: estado || "NUEVO", p_delta: delta
+    p_categoria: categoria, p_tipo: tipo, p_talla: talla || "", p_estado: estado || "NUEVO", p_delta: delta, p_empresa: empresa || ""
   }).then(function(res){
     if(res.error){ return { ok:false, error: res.error.message }; }
     var row = res.data;
@@ -2382,7 +2383,7 @@ function ajustarInventarioDB(categoria, tipo, talla, estado, delta){
         }
       }
       if(!encontrado){
-        state.uniformeInventario.push({ id: row.id, categoria: row.categoria, tipo: row.tipo, talla: row.talla || "", cantidad: row.cantidad || 0, estado: row.estado || "NUEVO" });
+        state.uniformeInventario.push({ id: row.id, categoria: row.categoria, tipo: row.tipo, talla: row.talla || "", cantidad: row.cantidad || 0, estado: row.estado || "NUEVO", empresa: row.empresa || "" });
       }
       saveState();
     }
@@ -2391,22 +2392,22 @@ function ajustarInventarioDB(categoria, tipo, talla, estado, delta){
     return { ok:false, error: err && err.message ? err.message : String(err) };
   });
 }
-function descontarInventario(categoria, tipo, talla, cantidad, estado){
-  return ajustarInventarioDB(categoria, tipo, talla, estado, -(Number(cantidad) || 0));
+function descontarInventario(categoria, tipo, talla, cantidad, estado, empresa){
+  return ajustarInventarioDB(categoria, tipo, talla, estado, -(Number(cantidad) || 0), empresa);
 }
 function inventarioBajoStock(){
   var vistos = {};
   var resultado = [];
   for(var i=0;i<state.uniformeInventario.length;i++){
     var it = state.uniformeInventario[i];
-    var key = it.categoria + "|" + it.tipo + "|" + (ignoraTalla(it.categoria) ? "" : it.talla);
+    var key = it.categoria + "|" + it.tipo + "|" + (ignoraTalla(it.categoria) ? "" : it.talla) + "|" + (it.empresa||"");
     if(vistos[key]) continue;
     vistos[key] = true;
-    var total = inventarioDisponible(it.categoria, it.tipo, it.talla);
+    var total = inventarioDisponible(it.categoria, it.tipo, it.talla, undefined, it.empresa);
     if(total <= 2){
       var cat = catalogoItem(it.categoria, it.tipo);
       var nombre = cat ? cat.nombre : it.tipo;
-      resultado.push({ nombre: nombre, talla: it.talla, categoria: it.categoria, cantidad: total });
+      resultado.push({ nombre: nombre, talla: it.talla, categoria: it.categoria, cantidad: total, empresa: it.empresa||"" });
     }
   }
   return resultado;
@@ -2449,7 +2450,8 @@ function renderInvUniformeTab(el){
   html += '<option value="uniforme">Uniforme</option><option value="complemento">Complemento / equipo</option>';
   html += '</select></div>';
   html += '<div class="form-field"><label>Prenda / artículo</label><select id="invTipo"></select></div>';
-  html += '<div class="form-field"><label>Talla</label><input type="text" id="invTalla" placeholder="Ej. CH, M, G, XL"></div>';
+  html += '<div class="form-field" id="invTallaWrap"><label>Talla</label><input type="text" id="invTalla" placeholder="Ej. CH, M, G, XL"></div>';
+  html += '<div class="form-field" id="invEmpresaWrap" style="display:none;"><label>Empresa</label><select id="invEmpresa"><option value="ROANSA">ROANSA</option><option value="SPG">SPG</option></select></div>';
   html += '<div class="form-field"><label>Cantidad disponible</label><input type="number" id="invCantidad" min="0" value="1"></div>';
   html += '<div class="form-field"><label>Estado</label><select id="invEstado"><option value="NUEVO">Nuevo</option><option value="USADO">Usado</option></select></div>';
   html += '</div>';
@@ -2466,8 +2468,10 @@ function inventarioTablaHTML(categorias){
   if(lista.length === 0){ return '<div class="empty-msg">Sin artículos registrados todavía.</div>'; }
   lista = lista.slice().sort(function(a,b){
     var na = catalogoItem(a.categoria, a.tipo), nb = catalogoItem(b.categoria, b.tipo);
-    var sa = na ? na.nombre : a.tipo, sb = nb ? nb.nombre : b.tipo;
-    return sa < sb ? -1 : (sa > sb ? 1 : 0);
+    var nombreA = na ? na.nombre : a.tipo, nombreB = nb ? nb.nombre : b.tipo;
+    if(nombreA !== nombreB) return nombreA < nombreB ? -1 : 1;
+    var empA = a.empresa || "", empB = b.empresa || "";
+    return empA < empB ? -1 : (empA > empB ? 1 : 0);
   });
   var html = "";
   for(var i=0;i<lista.length;i++){
@@ -2476,7 +2480,7 @@ function inventarioTablaHTML(categorias){
     var nombre = cat ? cat.nombre : it.tipo;
     var bajo = (Number(it.cantidad)||0) <= 2;
     var estadoTxt = it.categoria === "antidoping" ? "" : (" &middot; " + ((it.estado||"NUEVO")==="USADO" ? "Usado" : "Nuevo"));
-    html += '<div class="doc-row"><div class="doc-name">' + esc(nombre) + (ignoraTalla(it.categoria) ? "" : (" &middot; Talla " + esc(it.talla || "—"))) + estadoTxt + (bajo ? ' <span class="pill pill-warn">Stock bajo</span>' : "") + '</div>';
+    html += '<div class="doc-row"><div class="doc-name">' + esc(nombre) + (it.empresa ? ' <span class="pill '+(it.empresa==="ROANSA"?"pill-roansa":"pill-spg")+'">'+it.empresa+'</span>' : '') + (ignoraTalla(it.categoria) ? "" : (" &middot; Talla " + esc(it.talla || "—"))) + estadoTxt + (bajo ? ' <span class="pill pill-warn">Stock bajo</span>' : "") + '</div>';
     html += '<div class="doc-controls">';
     html += '<input type="number" min="0" style="width:80px;" class="mut-accion" value="' + esc(it.cantidad) + '" data-inv-cant="' + it.id + '">';
     html += '<button class="btn small secondary mut-accion" data-inv-del="' + it.id + '">Eliminar</button>';
@@ -2496,21 +2500,22 @@ function poblarInvTipoSelect(){
 function actualizarInvTallaUI(){
   var categoria = val("invCategoria");
   var slug = val("invTipo");
-  var tallaInput = byId("invTalla");
+  var item = catalogoItem(categoria, slug);
+  var tallaWrap = byId("invTallaWrap");
+  var empresaWrap = byId("invEmpresaWrap");
+  if(empresaWrap){ empresaWrap.style.display = (item && item.porEmpresa) ? "" : "none"; }
+  if(!tallaWrap) return;
   if(ignoraTalla(categoria)){
-    tallaInput.value = "";
-    tallaInput.disabled = true;
-    tallaInput.placeholder = "No aplica";
+    tallaWrap.innerHTML = '<label>Talla</label><input type="text" id="invTalla" value="" disabled placeholder="No aplica">';
+  } else if(item && item.tallaFija){
+    tallaWrap.innerHTML = '<label>Talla</label><input type="text" id="invTalla" value="'+esc(item.tallaFija)+'" disabled>';
+  } else if(item && item.opcionesTalla){
+    var html = '<label>Talla</label><select id="invTalla">';
+    for(var i=0;i<item.opcionesTalla.length;i++){ html += '<option value="'+item.opcionesTalla[i]+'">'+item.opcionesTalla[i]+'</option>'; }
+    html += '</select>';
+    tallaWrap.innerHTML = html;
   } else {
-    var item = catalogoItem("uniforme", slug);
-    if(item && item.tallaFija){
-      tallaInput.value = item.tallaFija;
-      tallaInput.disabled = true;
-    } else {
-      tallaInput.value = "";
-      tallaInput.disabled = false;
-      tallaInput.placeholder = "Ej. CH, M, G, XL";
-    }
+    tallaWrap.innerHTML = '<label>Talla</label><input type="text" id="invTalla" placeholder="Ej. CH, M, G, XL">';
   }
 }
 function wireUniformesView(el){
@@ -2523,12 +2528,15 @@ function wireUniformesView(el){
     var talla = ignoraTalla(categoria) ? "" : val("invTalla").trim().toUpperCase();
     var cantidad = parseInt(val("invCantidad"), 10) || 0;
     var estado = val("invEstado") || "NUEVO";
+    var itemCat = catalogoItem(categoria, tipo);
+    var empresa = (itemCat && itemCat.porEmpresa) ? val("invEmpresa") : "";
     if(!tipo){ alert("Selecciona una prenda."); return; }
     if(!ignoraTalla(categoria) && !talla){ alert("Indica la talla."); return; }
+    if(itemCat && itemCat.porEmpresa && !empresa){ alert("Selecciona la empresa (ROANSA o SPG)."); return; }
     if(cantidad <= 0){ alert("La cantidad debe ser mayor a cero."); return; }
     var btnAgregar = el.querySelector('[data-action="inv-agregar"]');
     btnAgregar.disabled = true;
-    ajustarInventarioDB(categoria, tipo, talla, estado, cantidad).then(function(res){
+    ajustarInventarioDB(categoria, tipo, talla, estado, cantidad, empresa).then(function(res){
       btnAgregar.disabled = false;
       if(!res.ok){ alert("No se pudo guardar en el inventario: " + res.error); return; }
       renderInvUniformeTab(el);
@@ -3027,7 +3035,7 @@ function renderValeView(el, id){
 
   html += '<div class="note-box">Marca las prendas que se entregan, la talla y la cantidad. Al generar el vale se descontará automáticamente del inventario.</div>';
 
-  html += '<h3>Uniforme</h3><div id="valeUniformeItems">' + valeItemsUniformeHTML() + '</div>';
+  html += '<h3>Uniforme</h3><div id="valeUniformeItems">' + valeItemsUniformeHTML(e) + '</div>';
   html += '<h3 style="margin-top:20px;">Complementos y equipo</h3><div id="valeComplementoItems">' + valeItemsComplementosHTML() + '</div>';
 
   html += '<button class="btn mut-accion" data-action="generar-vale" style="margin-top:18px;">Generar liga para firma digital</button>';
@@ -3041,15 +3049,20 @@ function renderValeView(el, id){
   wireValesLista(el, e);
   ocultarSiConsulta(el);
 }
-function valeItemsUniformeHTML(){
+function valeItemsUniformeHTML(e){
   var html = "";
   for(var i=0;i<CAT_UNIFORME.length;i++){
     var it = CAT_UNIFORME[i];
     html += '<div class="doc-row" data-vale-item="'+it.slug+'">';
-    html += '<label style="display:flex;align-items:center;gap:8px;min-width:220px;"><input type="checkbox" data-vale-check="'+it.slug+'"> <span class="doc-name" style="min-width:0;">'+esc(it.nombre)+'</span></label>';
+    html += '<label style="display:flex;align-items:center;gap:8px;min-width:220px;"><input type="checkbox" data-vale-check="'+it.slug+'"> <span class="doc-name" style="min-width:0;">'+esc(it.nombre)+(it.porEmpresa ? ' <span class="pill '+(e.empresa==="ROANSA"?"pill-roansa":"pill-spg")+'">'+e.empresa+'</span>' : '')+'</span></label>';
     html += '<div class="doc-controls">';
     if(it.tallaFija){
       html += '<span style="font-size:12.5px;color:#777;">Talla: '+esc(it.tallaFija)+'</span>';
+    } else if(it.opcionesTalla){
+      var selTalla = '<select data-vale-talla="'+it.slug+'" style="width:80px;"><option value="">Talla</option>';
+      for(var ti=0;ti<it.opcionesTalla.length;ti++){ selTalla += '<option value="'+it.opcionesTalla[ti]+'">'+it.opcionesTalla[ti]+'</option>'; }
+      selTalla += '</select>';
+      html += selTalla;
     } else {
       html += '<input type="text" placeholder="Talla" style="width:80px;" data-vale-talla="'+it.slug+'">';
     }
@@ -3085,7 +3098,8 @@ function wireValeForm(el, e){
     var talla = tallaInput ? tallaInput.value.trim().toUpperCase() : ((fija && fija.tallaFija) || "");
     var estadoSel = el.querySelector('[data-vale-estado="'+slug+'"]');
     var estado = estadoSel ? estadoSel.value : "NUEVO";
-    var disp = inventarioDisponible(categoria, slug, talla, estado);
+    var empresaFiltro = (fija && fija.porEmpresa) ? e.empresa : "";
+    var disp = inventarioDisponible(categoria, slug, talla, estado, empresaFiltro);
     span.textContent = "(" + disp + " " + (estado==="USADO"?"usado":"nuevo") + (disp === 1 ? "" : "s") + " disponible" + (disp === 1 ? "" : "s") + ")";
   }
   for(i=0;i<CAT_UNIFORME.length;i++){
@@ -3128,11 +3142,12 @@ function wireValeForm(el, e){
         var estado = estadoSel ? estadoSel.value : "NUEVO";
         if(!talla){ alert("Indica la talla de: " + it.nombre); return; }
         if(cantidad <= 0){ alert("Indica una cantidad válida para: " + it.nombre); return; }
-        var disp = inventarioDisponible("uniforme", it.slug, talla, estado);
-        if(cantidad > disp){ faltantes.push(it.nombre + " (talla " + talla + ", " + (estado==="USADO"?"usado":"nuevo") + "): pediste " + cantidad + ", disponibles " + disp); }
+        var empresaItem = it.porEmpresa ? e.empresa : "";
+        var disp = inventarioDisponible("uniforme", it.slug, talla, estado, empresaItem);
+        if(cantidad > disp){ faltantes.push(it.nombre + (empresaItem ? (" [" + empresaItem + "]") : "") + " (talla " + talla + ", " + (estado==="USADO"?"usado":"nuevo") + "): pediste " + cantidad + ", disponibles " + disp); }
         seleccion[it.slug] = { talla: talla, cantidad: cantidad, bordado: bordado, estado: estado };
-        itemsParaDescontar.push({ categoria:"uniforme", tipo:it.slug, talla:talla, cantidad:cantidad, estado:estado });
-        itemsResumen.push({ categoria:"uniforme", tipo:it.slug, nombre:it.nombre, talla:talla, cantidad:cantidad, bordado:bordado, estado:estado });
+        itemsParaDescontar.push({ categoria:"uniforme", tipo:it.slug, talla:talla, cantidad:cantidad, estado:estado, empresa:empresaItem });
+        itemsResumen.push({ categoria:"uniforme", tipo:it.slug, nombre:it.nombre, talla:talla, cantidad:cantidad, bordado:bordado, estado:estado, empresa:empresaItem });
       }
     }
     for(i2=0;i2<CAT_COMPLEMENTOS.length;i2++){
@@ -3162,7 +3177,7 @@ function wireValeForm(el, e){
       var statusEl = byId("valeStatus");
       if(statusEl){ statusEl.style.color = "#2e9e4c"; statusEl.textContent = "Guardando vale..."; }
       var descuentos = itemsParaDescontar.map(function(d){
-        return descontarInventario(d.categoria, d.tipo, d.talla, d.cantidad, d.estado);
+        return descontarInventario(d.categoria, d.tipo, d.talla, d.cantidad, d.estado, d.empresa);
       });
       Promise.all(descuentos).then(function(resultados){
         var fallos = resultados.filter(function(r){ return !r.ok; });
